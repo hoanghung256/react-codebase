@@ -1,5 +1,6 @@
 import axios from "axios";
 import { log } from "log";
+import { HTTP_RESPONSE_STATUS_CODE } from "../constants/api";
 
 export const axiosInstance = axios.create({});
 
@@ -15,7 +16,7 @@ export const apiConnector = (method, url, bodyData, headers, params) => {
     res.then((data) => {
         log(data);
     }).catch((error) => {
-        if (error.status == 401) {
+        if (error.status == HTTP_RESPONSE_STATUS_CODE.UNAUTHORIZED) {
             log("Unauthorized");
             // dispatch(setToken(null));
             // dispatch(setUser(null));
