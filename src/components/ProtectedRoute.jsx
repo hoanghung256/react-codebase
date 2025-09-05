@@ -1,10 +1,10 @@
-import { Outlet } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { Navigate, Outlet } from "react-router-dom";
 
 function ProtectedRoute() {
-    const { token } = useSelector((state) => state.auth);
-    const { user } = useSelector((state) => state.profile);
+    const { token, userData } = useSelector((state) => state.auth);
 
-    if (!token || !user) {
+    if (!token || !userData) {
         return <Navigate to="/login" />;
     } else {
         return <Outlet />;

@@ -4,6 +4,11 @@
 - Linter: ESLint
 - Build tool: Vite
 - API: axios
-- Toast: react-hot-toast
 - Router: react-router-dom
+- State Management: Redux
 - UI lib: ...
+
+## Moreover
+
+- react-hook-form
+- react-hot-toast
