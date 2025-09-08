@@ -1,7 +1,11 @@
-import React from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { useDispatch } from "react-redux";
 
 function LoginPage() {
+    const [isLoading, setIsLoading] = useState(false);
+    const dispatch = useDispatch();
+
     const {
         register,
         handleSubmit,
@@ -9,8 +13,9 @@ function LoginPage() {
     } = useForm();
 
     const onSubmit = (data) => {
-        // Handle login logic here
-        alert(`Email: ${data.email}\nPassword: ${data.password}`);
+        setIsLoading(true);
+        dispatch(login(data.email, data.password));
+        setIsLoading(false);
     };
 
     return (
@@ -27,7 +32,7 @@ function LoginPage() {
                     <input type="password" {...register("password", { required: "Password is required" })} />
                     {errors.password && <span>{errors.password.message}</span>}
                 </div>
-                <button type="submit">Login</button>
+                {isLoading ? <p>...Loading</p> : <button type="submit">Login</button>}
             </form>
         </div>
     );
