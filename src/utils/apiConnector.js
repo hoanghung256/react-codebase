@@ -1,5 +1,5 @@
 import axios from "axios";
-import { log } from "log";
+import { log } from "../utils/log";
 import { HTTP_RESPONSE_STATUS_CODE } from "../constants/api";
 
 export const axiosInstance = axios.create({});
