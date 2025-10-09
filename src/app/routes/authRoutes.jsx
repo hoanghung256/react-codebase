@@ -1,5 +1,5 @@
-import ProtectedRoute from "../../components/ProtectedRoute";
-import LoginPage from "../../features/auth/pages/LoginPage";
+import ProtectedRoute from "../../common/components/ProtectedRoute";
+import LoginPage from "../../features/auth/pages/LoginPage/LoginPage";
 import SignUpPage from "../../features/auth/pages/SignUpPage";
 
 export const authRoutes = [
