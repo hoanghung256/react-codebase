@@ -67,6 +67,7 @@ It features **video calls, chat, live code editor, and real-time collaboration**
 ## 📂 Project Structure
 
 ```
+```
 
 intervu-frontend/
 │
@@ -92,6 +93,7 @@ intervu-frontend/
 ````
 
 ---
+```
 
 ## 🔧 Environment Variables (`.env`)
 
@@ -102,7 +104,7 @@ VITE_API_BASE_URL=https://intervu-be.azurewebsites.net
 VITE_SIGNALR_URL=wss://intervu-be.azurewebsites.net/hub
 VITE_WEBRTC_ICE_SERVER_URL=stun:stun.l.google.com:19302
 ````
-
+````
 > ⚠️ If you deploy backend with custom domain, remember to update the URLs above.
 
 ---
