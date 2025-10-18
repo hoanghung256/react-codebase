@@ -1,5 +1,3 @@
----
-
 ```markdown
 # 💼 Intervu – Mock Interview Platform
 
@@ -7,8 +5,6 @@
 It features **video calls, chat, live code editor, and real-time collaboration**, helping users practice interviews effectively with professionals or peers.
 
 > 🚀 Built with **React + Vite + Redux Toolkit + Material UI**, powered by **.NET 8 Web API + SignalR** backend, and deployed with **Vercel + Azure CI/CD**.
-
----
 
 ## 🧱 Overview
 
