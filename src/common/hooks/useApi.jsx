@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { apiConnector, axiosInstance } from "../utils/apiConnector";
+import { axiosInstance } from "../utils/apiConnector";
 import { HTTP_RESPONSE_STATUS_CODE, METHOD } from "../constants/api";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
