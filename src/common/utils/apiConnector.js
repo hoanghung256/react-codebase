@@ -1,31 +1,13 @@
 import axios from "axios";
-import { log } from "../utils/log";
-import { HTTP_RESPONSE_STATUS_CODE } from "../constants/api";
+import { BE_BASE_URL } from "../constants/env";
 
-export const axiosInstance = axios.create({});
+export const axiosInstance = axios.create({
+    baseURL: BE_BASE_URL,
+});
 
-export const apiConnector = (method, url, bodyData, headers, params) => {
-    const res = axiosInstance({
-        method: `${method}`,
-        url: `${url}`,
-        data: bodyData ? bodyData : null,
-        headers: headers ? headers : null,
-        params: params ? params : null,
-    });
+axiosInstance.interceptors.response.use((config) => {
+    const token = localStorage.getItem("token");
+    if (token) config.headers.Authorization = `Bearer ${token}`;
 
-    res.then((data) => {
-        log(data);
-    }).catch((error) => {
-        if (error.status == HTTP_RESPONSE_STATUS_CODE.UNAUTHORIZED) {
-            log("Unauthorized");
-            // dispatch(setToken(null));
-            // dispatch(setUser(null));
-            localStorage.removeItem("token");
-            localStorage.removeItem("user");
-            window.location.href = "/";
-        }
-        log(error);
-    });
-
-    return res;
-};
+    return config;
+});
