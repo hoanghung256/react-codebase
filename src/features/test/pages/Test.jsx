@@ -1,23 +1,26 @@
 import { testEndPoints } from "../services/testApi";
-import useApi from "../../../common/hooks/useApi";
-import { METHOD } from "../../../common/constants/api";
 import { useParams } from "react-router-dom";
 import CircularProgress from "@mui/material/CircularProgress";
+import { Button } from "@mui/material";
+import CreateUserModal from "./CreateUserModal";
+import { useState } from "react";
+import useQueryApi from "../../../common/hooks/useQueryApi";
 
 function Test() {
     const { id } = useParams();
+    const [openModal, setOpenModal] = useState(false);
     const {
         data: profileData,
         error: getProfileError,
         loading: getProfileLoading,
-    } = useApi({
-        method: METHOD.GET,
-        apiEndpoint: testEndPoints.GET_PROFILE_API,
+    } = useQueryApi({
+        endPoint: testEndPoints.GET_PROFILE_API,
         displaySuccessMessage: true,
-        arg: {
+        param: {
             id: id,
             alo: "ALoooo",
         },
+        trigger: true,
     });
 
     if (getProfileLoading) {
@@ -27,6 +30,10 @@ function Test() {
     // return minimal UI so this is a valid React component
     return profileData ? (
         <div>
+            <Button variant="contained" color="primary" onClick={() => setOpenModal(true)}>
+                Create user
+            </Button>
+            <CreateUserModal open={openModal} onClose={() => setOpenModal(false)} onSuccess={() => {}} />
             <h1>Profile ID: {id}</h1>
             {profileData && <pre>{JSON.stringify(profileData, null, 2)}</pre>}
             {getProfileError && <p style={{ color: "red" }}>Error: {getProfileError.message}</p>}
