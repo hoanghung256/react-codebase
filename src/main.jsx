@@ -9,7 +9,7 @@ import { ThemeProvider } from "@mui/material/styles";
 import { theme } from "./common/constants/theme.jsx";
 
 const router = createBrowserRouter(routes);
-const store = configureStore({ reducer: rootReducer });
+export const store = configureStore({ reducer: rootReducer });
 
 createRoot(document.getElementById("root")).render(
     <ThemeProvider theme={theme}>
