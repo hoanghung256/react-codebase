@@ -40,8 +40,7 @@ export const callApi = async ({ method, endpoint, displaySuccessMessage = false,
             localStorage.removeItem("token");
             localStorage.removeItem("user");
             window.location.href = "/login";
-        }
-        if (alertErrorMessage) {
+        } else if (alertErrorMessage) {
             alert(error.message || "An error occurred");
         } else {
             throw error;
