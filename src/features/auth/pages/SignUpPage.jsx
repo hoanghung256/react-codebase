@@ -19,8 +19,8 @@ function SignUpPage() {
     const onSubmit = async (data) => {
         const res = await callApi({
             method: METHOD.POST,
-            url: authEndPoints.SIGN_UP_API,
-            data: {
+            endpoint: authEndPoints.SIGN_UP_API,
+            arg: {
                 fullName: data.fullName,
                 email: data.email,
                 password: data.password,
