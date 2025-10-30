@@ -16,7 +16,7 @@ axiosInstance.interceptors.response.use((config) => {
     return config;
 });
 
-export const callApi = async ({ method, endpoint, displaySuccessMessage = false, alertErrorMessage = false, arg }) => {
+export const callApi = async ({ method, endpoint, arg, displaySuccessMessage = false, alertErrorMessage = false }) => {
     try {
         store.dispatch(setLoading(true));
         const isGetOrDelete = method === METHOD.GET || method === METHOD.DELETE;
@@ -40,8 +40,7 @@ export const callApi = async ({ method, endpoint, displaySuccessMessage = false,
             localStorage.removeItem("token");
             localStorage.removeItem("user");
             window.location.href = "/login";
-        }
-        if (alertErrorMessage) {
+        } else if (alertErrorMessage) {
             alert(error.message || "An error occurred");
         } else {
             throw error;
