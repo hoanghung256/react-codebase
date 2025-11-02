@@ -10,7 +10,7 @@ function CreateUserModal({ open, onClose, onSuccess }) {
     const [password, setPassword] = useState("");
 
     const createUser = async () => {
-        const res = await callApi({
+        const  { success } = await callApi({
             method: METHOD.POST,
             endpoint: testEndPoints.GET_PROFILE_API,
             displaySuccessMessage: true,
@@ -18,8 +18,10 @@ function CreateUserModal({ open, onClose, onSuccess }) {
             arg: { fullname, email, password },
         });
 
-        console.log("check", res);
-        onClose();
+        if (success) {
+            onSuccess();
+            onClose();
+        }
     };
 
     return (

@@ -23,16 +23,17 @@ function useQueryApi({ endPoint, displaySuccessMessage = false, param = null, tr
         setLoading(true);
         setError(null);
         try {
-            const response = await callApi({
+            const { success, data, message } = await callApi({
                 method: METHOD.GET,
                 endpoint: endPoint,
                 displaySuccessMessage,
                 arg: param,
             });
 
-            if (isMounted) {
-                setData(response);
-            }
+            // if (isMounted) {
+            console.log("API response for", endPoint, data);
+            setData(data);
+            // }
         } catch (error) {
             if (isMounted) {
                 setError(error);
