@@ -13,6 +13,9 @@ function App() {
                     Fetch your profile
                 </Button>
             )}
+            <Button variant="contained" color="secondary" LinkComponent={Link} to={"/interview"} style={{ marginLeft: 16 }}>
+                Interview Rooms
+            </Button>
             <Button variant="contained" color="secondary" LinkComponent={Link} to={"/signup"} style={{ marginLeft: 16 }}>
                 Signup
             </Button>
@@ -22,4 +25,5 @@ function App() {
         </div>
     );
 }
+
 export default App;

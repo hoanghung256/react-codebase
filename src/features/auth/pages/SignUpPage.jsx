@@ -17,7 +17,7 @@ function SignUpPage() {
     
 
     const onSubmit = async (data) => {
-        const res = await callApi({
+        const { success, data: responseData, message } = await callApi({
             method: METHOD.POST,
             endpoint: authEndPoints.SIGN_UP_API,
             arg: {
@@ -29,7 +29,7 @@ function SignUpPage() {
             alertErrorMessage: true,
         });
 
-        if (res && confirm("Đăng ký thành công! Login để tiếp tục")) {
+        if (success && confirm("Đăng ký thành công! Login để tiếp tục")) {
             navigate("/login");
         }
         resetForm();

@@ -19,7 +19,7 @@ function LoginPage() {
     const navigate = useNavigate();
 
     const onSubmit = async (data) => {
-        const res = await callApi({
+        const { success, data: responseData, message } = await callApi({
             method: METHOD.POST,
             endpoint: authEndPoints.LOGIN_API,
             arg: {
@@ -30,11 +30,11 @@ function LoginPage() {
             alertErrorMessage: true,
         });
 
-        if (res) {
-            localStorage.setItem("user", JSON.stringify(res.user));
-            localStorage.setItem("token", JSON.stringify(res.token));
-            dispatch(setUserData(res.user));
-            dispatch(setToken(res.token));
+        if (success) {
+            localStorage.setItem("user", JSON.stringify(responseData.user));
+            localStorage.setItem("token", JSON.stringify(responseData.token));
+            dispatch(setUserData(responseData.user));
+            dispatch(setToken(responseData.token));
 
             navigate("/");
         }

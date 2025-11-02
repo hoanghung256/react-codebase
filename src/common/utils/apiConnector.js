@@ -33,7 +33,11 @@ export const callApi = async ({ method, endpoint, arg, displaySuccessMessage = f
         if (displaySuccessMessage) {
             toast.success(response.data.message || "Successful");
         }
-        return response.data.data;
+        return { 
+            success: response.data?.success, 
+            data: response.data?.data, 
+            message: response.data?.message
+        };
     } catch (error) {
         if (error.status == HTTP_RESPONSE_STATUS_CODE.UNAUTHORIZED) {
             confirm("Unauthorized access. Please log in again.");
