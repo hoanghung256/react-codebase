@@ -1,21 +1,44 @@
-import { useState } from "react";
 import { useForm } from "react-hook-form";
+import useLoading from "../../../../common/hooks/useLoading";
+import { callApi } from "../../../../common/utils/apiConnector";
+import { METHOD } from "../../../../common/constants/api";
+import { authEndPoints } from "../../services/authApi";
 import { useDispatch } from "react-redux";
+import { setToken, setUserData } from "../../../../common/store/authSlice";
+import { useNavigate } from "react-router-dom";
 
 function LoginPage() {
-    const [isLoading, setIsLoading] = useState(false);
+    const isLoading = useLoading();
     const dispatch = useDispatch();
-
     const {
         register,
         handleSubmit,
+        reset: resetForm,
         formState: { errors },
     } = useForm();
+    const navigate = useNavigate();
 
-    const onSubmit = (data) => {
-        setIsLoading(true);
-        dispatch(login(data.email, data.password));
-        setIsLoading(false);
+    const onSubmit = async (data) => {
+        const { success, data: responseData, message } = await callApi({
+            method: METHOD.POST,
+            endpoint: authEndPoints.LOGIN_API,
+            arg: {
+                email: data.email,
+                password: data.password,
+            },
+            displaySuccessMessage: true,
+            alertErrorMessage: true,
+        });
+
+        if (success) {
+            localStorage.setItem("user", JSON.stringify(responseData.user));
+            localStorage.setItem("token", JSON.stringify(responseData.token));
+            dispatch(setUserData(responseData.user));
+            dispatch(setToken(responseData.token));
+
+            navigate("/");
+        }
+        resetForm();
     };
 
     return (

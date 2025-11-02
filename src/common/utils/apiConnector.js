@@ -1,31 +1,55 @@
 import axios from "axios";
-import { log } from "../utils/log";
-import { HTTP_RESPONSE_STATUS_CODE } from "../constants/api";
+import { BE_BASE_URL } from "../constants/env";
+import { HTTP_RESPONSE_STATUS_CODE, METHOD } from "../constants/api";
+import toast from "react-hot-toast";
+import { setLoading } from "../store/authSlice";
+import { store } from "../../main";
 
-export const axiosInstance = axios.create({});
+export const axiosInstance = axios.create({
+    baseURL: BE_BASE_URL,
+});
 
-export const apiConnector = (method, url, bodyData, headers, params) => {
-    const res = axiosInstance({
-        method: `${method}`,
-        url: `${url}`,
-        data: bodyData ? bodyData : null,
-        headers: headers ? headers : null,
-        params: params ? params : null,
-    });
+axiosInstance.interceptors.response.use((config) => {
+    const token = localStorage.getItem("token");
+    if (token) config.headers.Authorization = `Bearer ${token}`;
 
-    res.then((data) => {
-        log(data);
-    }).catch((error) => {
+    return config;
+});
+
+export const callApi = async ({ method, endpoint, arg, displaySuccessMessage = false, alertErrorMessage = false }) => {
+    try {
+        store.dispatch(setLoading(true));
+        const isGetOrDelete = method === METHOD.GET || method === METHOD.DELETE;
+        const response = await axiosInstance({
+            method,
+            url: endpoint,
+            data: !isGetOrDelete ? arg : null,
+            params: isGetOrDelete ? arg : null,
+        });
+
+        if (!response.data.success) {
+            throw new Error(response.data.message);
+        }
+        if (displaySuccessMessage) {
+            toast.success(response.data.message || "Successful");
+        }
+        return { 
+            success: response.data?.success, 
+            data: response.data?.data, 
+            message: response.data?.message
+        };
+    } catch (error) {
         if (error.status == HTTP_RESPONSE_STATUS_CODE.UNAUTHORIZED) {
-            log("Unauthorized");
-            // dispatch(setToken(null));
-            // dispatch(setUser(null));
+            confirm("Unauthorized access. Please log in again.");
             localStorage.removeItem("token");
             localStorage.removeItem("user");
-            window.location.href = "/";
+            window.location.href = "/login";
+        } else if (alertErrorMessage) {
+            alert(error.message || "An error occurred");
+        } else {
+            throw error;
         }
-        log(error);
-    });
-
-    return res;
+    } finally {
+        store.dispatch(setLoading(false));
+    }
 };
