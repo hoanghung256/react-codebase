@@ -1,20 +1,62 @@
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { BE_BASE_URL } from "../../../../common/constants/env";
 import * as signalR from "@microsoft/signalr";
 import { useEffect, useRef, useState } from "react";
 import useUser from "../../../../common/hooks/useUser";
+import { UnControlled as CodeMirror } from "react-codemirror2";
+import "codemirror/lib/codemirror.css";
+import "codemirror/mode/javascript/javascript";
+import "codemirror/mode/python/python";
+import "codemirror/mode/clike/clike";
+import "codemirror/mode/lua/lua";
+import { Box, Select, MenuItem, Typography } from "@mui/material";
 
 const ICE_SERVERS = [{ urls: "stun:stun.l.google.com:19302" }];
+
+const languages = {
+    python: {
+        mode: "python",
+        example: "print(\"Hello, World!\")",
+    },
+    javascript: {
+        mode: "javascript",
+        example: "console.log(\"Hello, World!\");",
+    },
+    java: {
+        mode: "text/x-java",
+        example: "import java.util.*;\n\npublic class Main {\n    public static void main(String[] args) {\n      System.out.println(\"Hello, World!\");\n  }\n}",
+    },
+    csharp: {
+        mode: "text/x-csharp",
+        example: "using System;\nusing System.Collections.Generic;\nusing System.Linq;\nusing System.Text.RegularExpressions;\n\nnamespace HelloWorld\n{\n\tpublic class Program\n\t{\n\t\tpublic static void Main(string[] args)\n\t\t{\n\t\t\tConsole.WriteLine(\"Hello, World!\");\n\t\t}\n\t}\n}",
+    },
+    c: {
+        mode: "text/x-csrc",
+        example: "#include <stdio.h>\nint main()\n{\n    printf(\"Hello, World!\");\n}",
+    },
+    "c++": {
+        mode: "text/x-c++src",
+        example: "#include <iostream>\nusing namespace std;\n\nint main() \n{\n    cout << \"Hello, World!\";\n    return 0;\n}",
+    },
+    lua: {
+        mode: "lua",
+        example: "print (\"Hello, World!\")",
+    },
+};
 
 function InterviewRoomPage() {
     const user = useUser();
     const { roomId } = useParams();
+    const navigate = useNavigate();
     const localVideoRef = useRef();
     const remoteVideoRef = useRef();
     const pcRef = useRef(null);
     const connRef = useRef(null);
+    const editorRef = useRef(null);
     const [myId, setMyId] = useState(null);
     const [peers, setPeers] = useState([]);
+    const [language, setLanguage] = useState("javascript");
+    const [code, setCode] = useState(languages.javascript.example);
 
     // --- Resizable layout state ---
     const containerRef = useRef(null);
@@ -80,16 +122,17 @@ function InterviewRoomPage() {
 
     useEffect(() => {
         const conn = new signalR.HubConnectionBuilder()
-            .withUrl(`${BE_BASE_URL}/hubs/interviewroom?userId=${user?.id || 1}`)
+            .withUrl(`${BE_BASE_URL}/hubs/interviewroom?userId=${user?.id || 1}&role=${user?.role}`)
             .withAutomaticReconnect()
             .build();
+
+        connRef.current = conn;
 
         conn.start()
             .then(() => {
                 console.log("SignalR connected");
                 conn.invoke("JoinRoom", roomId).then(() => {
                     console.log("Joined room", roomId);
-                    // Use connectionId exposed by SignalR client after start
                     const id = conn.connectionId;
                     setMyId(id ?? null);
                     console.log("My connection id:", id);
@@ -97,17 +140,14 @@ function InterviewRoomPage() {
             })
             .catch(console.error);
 
-        // Update myId if the connection re-establishes (connectionId can change)
         conn.onreconnected?.((newId) => {
             setMyId(newId ?? null);
             console.log("Reconnected with id:", newId);
         });
 
-
         conn.on("UserJoined", (connectionId) => {
             console.log("UserJoined", connectionId);
             setPeers((p) => {
-                // Avoid adding myself; compare to current connectionId from the active connection
                 const selfId = conn.connectionId;
                 if (!p.includes(connectionId) && connectionId !== selfId) return [...p, connectionId];
                 return p;
@@ -118,7 +158,6 @@ function InterviewRoomPage() {
             setPeers((p) => p.filter((x) => x !== connectionId));
         });
 
-        // Receive Offer
         conn.on("ReceiveOffer", async (fromId, sdp) => {
             console.log("ReceiveOffer from", fromId);
             await createPeerConnection(fromId, false);
@@ -128,14 +167,12 @@ function InterviewRoomPage() {
             conn.invoke("SendAnswer", fromId, answer.sdp);
         });
 
-        // Receive Answer
         conn.on("ReceiveAnswer", async (fromId, sdp) => {
             console.log("ReceiveAnswer from", fromId);
             if (!pcRef.current) return;
             await pcRef.current.setRemoteDescription({ type: "answer", sdp });
         });
 
-        // ICE candidate
         conn.on("ReceiveIceCandidate", async (fromId, candidate) => {
             try {
                 if (pcRef.current && candidate) {
@@ -146,7 +183,20 @@ function InterviewRoomPage() {
             }
         });
 
-        connRef.current = conn;
+        conn.on("ReceiveCode", (newCode) => {
+            if (editorRef.current && editorRef.current.getValue() !== newCode) {
+                const cursor = editorRef.current.getCursor();
+                editorRef.current.setValue(newCode);
+                editorRef.current.setCursor(cursor);
+            }
+        });
+
+        conn.on("ReceiveLanguage", (lang, initialCode) => {
+            setLanguage(lang);
+            if (editorRef.current) {
+                editorRef.current.setValue(initialCode);
+            }
+        });
 
         return () => {
             if (connRef.current) {
@@ -155,7 +205,7 @@ function InterviewRoomPage() {
             }
             if (pcRef.current) pcRef.current.close();
         };
-    }, [roomId]);
+    }, [roomId, user?.id, user?.role]);
 
     async function startLocalStream() {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
@@ -171,7 +221,6 @@ function InterviewRoomPage() {
 
         pcRef.current = new RTCPeerConnection({ iceServers: ICE_SERVERS });
 
-        // send ICE candidates to remote
         pcRef.current.onicecandidate = (e) => {
             if (e.candidate) {
                 connRef.current.invoke("SendIceCandidate", targetId, JSON.stringify(e.candidate));
@@ -192,9 +241,42 @@ function InterviewRoomPage() {
         }
     }
 
-    // Khi click Call -> gọi target
     const call = async (targetId) => {
         await createPeerConnection(targetId, true);
+    };
+
+    const leaveRoom = () => {
+        if (connRef.current) {
+            connRef.current.invoke("LeaveRoom", roomId).then(() => {
+                navigate("/interview");
+            }).catch(console.error);
+        }
+    };
+
+    const handleCodeChange = (editor, data, value) => {
+        if (data.origin !== 'setValue' && user?.role !== 1) {
+            setCode(value);
+            if (connRef.current) {
+                connRef.current.invoke("SendCode", roomId, value);
+            }
+        }
+    };
+
+    const handleLanguageChange = (e) => {
+        const newLang = e.target.value;
+        const newLangConfig = languages[newLang];
+        if (newLangConfig) {
+            setLanguage(newLang);
+            const newCode = newLangConfig.example;
+            setCode(newCode);
+            if (editorRef.current) {
+                editorRef.current.setValue(newCode);
+            }
+
+            if (connRef.current) {
+                connRef.current.invoke("SendLanguage", roomId, newLang, newCode);
+            }
+        }
     };
 
     const resizerStyle = {
@@ -205,20 +287,24 @@ function InterviewRoomPage() {
     };
 
     return (
-        <div style={{ display: "flex", flexDirection: "column", height: "100vh" }}>
-            {/* Header */}
+        <Box style={{ display: "flex", flexDirection: "column", height: "100vh" }}>
             <header
                 style={{
                     padding: "10px 16px",
                     borderBottom: "1px solid #e5e7eb",
                     background: "#fafafa",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
                 }}
             >
-                <strong>Interview Room:</strong> {roomId}
+                <div>
+                    <strong>Interview Room:</strong> {roomId}
+                </div>
+                <button onClick={leaveRoom}>Leave Room</button>
             </header>
 
-            {/* 3 vertical resizable sections */}
-            <div
+            <Box
                 ref={containerRef}
                 style={{
                     display: "flex",
@@ -227,45 +313,79 @@ function InterviewRoomPage() {
                     overflow: "hidden",
                 }}
             >
-                {/* Left section */}
-                <div
-                    style={{
+                <Box
+                    sx={{
                         width: `${cols[0]}%`,
                         minWidth: 0,
                         overflow: "auto",
-                        padding: 12,
+                        padding: 1.5,
                         borderRight: "1px solid #eee",
                     }}
                 >
                     White board for question paper(plain text)
-                </div>
+                </Box>
 
-                {/* Resizer between left and middle */}
                 <div style={resizerStyle} onMouseDown={(e) => startDrag(e, 0)} />
 
-                {/* Middle section */}
-                <div
-                    style={{
+                <Box
+                    sx={{
                         width: `${cols[1]}%`,
                         minWidth: 0,
                         overflow: "auto",
-                        padding: 12,
+                        padding: 1.5,
                         borderRight: "1px solid #eee",
                     }}
                 >
-                    Code editor with syntax highlight (read-only for interviewee)
-                </div>
+                    {user?.role === 0 && (
+                        <Select
+                            value={language}
+                            onChange={handleLanguageChange}
+                            sx={{ mb: 1, minWidth: 120 }}
+                        >
+                            {Object.keys(languages).map(lang => (
+                                <MenuItem key={lang} value={lang}>
+                                    {lang.charAt(0).toUpperCase() + lang.slice(1)}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    )}
+                    {user?.role === 1 && (
+                        <Typography variant="subtitle1" sx={{ mb: 1 }}>
+                            Language: <strong>{language.charAt(0).toUpperCase() + language.slice(1)}</strong>
+                        </Typography>
+                        // <div>
+                        //     <select value={language} style={{ marginLeft: 16 }} disabled>
+                        //         <option>{language.charAt(0).toUpperCase() + language.slice(1)}</option>
+                        //     </select>
+                        //     <span style={{ marginLeft: 16, fontWeight: "bold" }}>
+                        //     Language: {language.charAt(0).toUpperCase() + language.slice(1)}
+                        // </span>
+                        // </div>
+                    )}
+                    <Box sx={{ border: "1px solid black" }}>
+                        <CodeMirror
+                            value={code}
+                            editorDidMount={editor => {
+                                editorRef.current = editor;
+                            }}
+                            options={{
+                                mode: languages[language].mode,
+                                lineNumbers: true,
+                                readOnly: user?.role === 1,
+                            }}
+                            onChange={handleCodeChange}
+                        />
+                    </Box>
+                </Box>
 
-                {/* Resizer between middle and right */}
                 <div style={resizerStyle} onMouseDown={(e) => startDrag(e, 1)} />
 
-                {/* Right section (videos) */}
-                <div
-                    style={{
+                <Box
+                    sx={{
                         width: `${cols[2]}%`,
                         minWidth: 0,
                         overflow: "auto",
-                        padding: 12,
+                        padding: 1.5,
                     }}
                 >
                     <h3 style={{ marginTop: 0 }}>Info</h3>
@@ -300,9 +420,9 @@ function InterviewRoomPage() {
                             style={{ width: "100%", borderRadius: 8, background: "#000" }}
                         />
                     </div>
-                </div>
-            </div>
-        </div>
+                </Box>
+            </Box>
+        </Box>
     );
 }
 
