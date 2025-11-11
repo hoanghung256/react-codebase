@@ -28,6 +28,7 @@ function useQueryApi({ endPoint, displaySuccessMessage = false, param = null, tr
                 endpoint: endPoint,
                 displaySuccessMessage,
                 arg: param,
+                alertErrorMessage: true,
             });
 
             // if (isMounted) {

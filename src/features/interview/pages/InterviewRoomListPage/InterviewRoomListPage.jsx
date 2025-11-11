@@ -16,10 +16,6 @@ function InterviewRoomListPage() {
         endPoint: interviewEndPoints.INTERVIEW_ROOMS,
         displaySuccessMessage: false,
         trigger: true,
-        param: {
-            userId: user.id,
-            role : user.role,
-        },
     });
     const navigate = useNavigate();
 

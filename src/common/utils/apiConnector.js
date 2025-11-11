@@ -9,12 +9,18 @@ export const axiosInstance = axios.create({
     baseURL: BE_BASE_URL,
 });
 
-axiosInstance.interceptors.response.use((config) => {
-    const token = localStorage.getItem("token");
-    if (token) config.headers.Authorization = `Bearer ${token}`;
+axiosInstance.interceptors.request.use(
+    (config) => {
+        const token = JSON.parse(localStorage.getItem("token"));
+        console.log(token);
 
-    return config;
-});
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+    },
+    (error) => Promise.reject(error),
+);
 
 export const callApi = async ({ method, endpoint, arg, displaySuccessMessage = false, alertErrorMessage = false }) => {
     try {
@@ -33,10 +39,10 @@ export const callApi = async ({ method, endpoint, arg, displaySuccessMessage = f
         if (displaySuccessMessage) {
             toast.success(response.data.message || "Successful");
         }
-        return { 
-            success: response.data?.success, 
-            data: response.data?.data, 
-            message: response.data?.message
+        return {
+            success: response.data?.success,
+            data: response.data?.data,
+            message: response.data?.message,
         };
     } catch (error) {
         if (error.status == HTTP_RESPONSE_STATUS_CODE.UNAUTHORIZED) {
@@ -44,6 +50,9 @@ export const callApi = async ({ method, endpoint, arg, displaySuccessMessage = f
             localStorage.removeItem("token");
             localStorage.removeItem("user");
             window.location.href = "/login";
+        } else if (error.status == HTTP_RESPONSE_STATUS_CODE.FORBIDDENT) {
+            alert("You do not have permission to perform this action.");
+            window.location.href = "/";
         } else if (alertErrorMessage) {
             alert(error.message || "An error occurred");
         } else {
