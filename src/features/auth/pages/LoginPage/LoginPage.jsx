@@ -142,6 +142,18 @@ function LoginPage() {
                                     </Button>
                                 )}
                             </div>
+                            
+                            <div style={{ textAlign: 'center', marginTop: '16px' }}>
+                                <Typography style={{ fontSize: '14px', color: 'rgba(255,255,255,0.6)' }}>
+                                    Don't have an account?{' '}
+                                    <span 
+                                        onClick={() => navigate('/signup')} 
+                                        style={{ color: '#7B61FF', cursor: 'pointer', fontWeight: 600, textDecoration: 'underline' }}
+                                    >
+                                        Sign up
+                                    </span>
+                                </Typography>
+                            </div>
                         </form>
                     </div>
 
