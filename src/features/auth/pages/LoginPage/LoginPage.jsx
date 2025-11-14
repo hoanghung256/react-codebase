@@ -82,7 +82,7 @@ function LoginPage() {
                                     InputProps={{ disableUnderline: true }}
                                     sx={{
                                         background: 'rgba(255,255,255,0.04)',
-                                        '& .MuiFilledInput-input': { color: '#fff', padding: '16px 14px' },
+                                        '& .MuiFilledInput-input': { color: '#fff', padding: '28px 14px 8px' },
                                         '& .MuiFilledInput-root': { borderRadius: '8px', transition: 'all 0.2s ease' },
                                         '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.6)' },
                                         '&:hover .MuiFilledInput-root': { background: 'rgba(255,255,255,0.06)' }
@@ -102,7 +102,7 @@ function LoginPage() {
                                     InputProps={{ disableUnderline: true }}
                                     sx={{
                                         background: 'rgba(255,255,255,0.04)',
-                                        '& .MuiFilledInput-input': { color: '#fff', padding: '16px 14px' },
+                                        '& .MuiFilledInput-input': { color: '#fff', padding: '28px 14px 8px' },
                                         '& .MuiFilledInput-root': { borderRadius: '8px', transition: 'all 0.2s ease' },
                                         '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.6)' },
                                         '&:hover .MuiFilledInput-root': { background: 'rgba(255,255,255,0.06)' }
