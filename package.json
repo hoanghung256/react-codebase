@@ -20,6 +20,7 @@
     "axios": "^1.11.0",
     "codemirror": "^5.65.20",
     "gsap": "^3.13.0",
+    "ogl": "^1.0.11",
     "react": "^19.1.1",
     "react-codemirror2": "^9.0.1",
     "react-dom": "^19.1.1",
