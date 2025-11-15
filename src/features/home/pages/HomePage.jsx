@@ -33,11 +33,12 @@ function HomePage() {
 
   // Re-fetch khi filters thay đổi
   useEffect(() => {
-    const hasFilters = filters.company || filters.skill;
-    if (hasFilters) {
-      dispatch(fetchInterviewers(filters));
-    }
-  }, [dispatch, filters]);
+    dispatch(fetchInterviewers({ 
+      searchTerm: filters.searchTerm,
+      companyId: filters.company,
+      skillId: filters.skill
+    }));
+  }, [dispatch, filters.searchTerm, filters.company, filters.skill]);
 
   // Re-fetch khi page thay đổi
   useEffect(() => {

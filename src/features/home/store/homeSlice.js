@@ -78,7 +78,8 @@ const homeSlice = createSlice({
         // Filters
         filters: {
             company: null,
-            skill: null
+            skill: null,
+            searchTerm: ''
         },
     },
     reducers: {
@@ -90,7 +91,8 @@ const homeSlice = createSlice({
         clearFilters(state) {
             state.filters = {
                 company: null,
-                skill: null
+                skill: null,
+                searchTerm: ''
             };
             state.pagination.currentPage = 1;
         },
