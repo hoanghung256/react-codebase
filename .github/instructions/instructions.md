@@ -72,7 +72,6 @@ const theme = createTheme({
 });
 ```
 
-
 ### 2.2. Typography
 
 **Primary Font**: Inter (from Google Fonts)
@@ -153,7 +152,6 @@ const theme = createTheme({
 });
 ```
 
-
 ### 2.3. Shape & Spacing
 
 **Border Radius**: 8px (rounded-lg)  
@@ -233,7 +231,6 @@ const theme = createTheme({
 <Button variant="text">Cancel</Button>
 ```
 
-
 ### 3.2. Cards (MuiCard, MuiPaper)
 
 **Style**: Use both border AND shadow for depth
@@ -288,7 +285,6 @@ const theme = createTheme({
 </Card>
 ```
 
-
 ### 3.3. Chips/Tags (MuiChip)
 
 **Style**: Rounded pill shape with light background
@@ -322,7 +318,6 @@ const theme = createTheme({
 <Chip label="React" />
 <Chip label="Node.js" color="primary" />
 ```
-
 
 ### 3.4. Navigation Bar (MuiAppBar)
 
