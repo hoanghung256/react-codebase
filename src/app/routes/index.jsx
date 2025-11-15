@@ -4,6 +4,7 @@ import InterviewRoomPage from "../../features/interview/pages/InterviewRoomPage/
 import AuthLayout from "../layouts/AuthLayout";
 import DefaultLayout from "../layouts/DefaultLayout";
 import { authRoutes } from "./authRoutes";
+import { interviewerRoutes } from "./interviewerRoutes";
 
 export const routes = [
     { element: <AuthLayout />, children: authRoutes },
@@ -14,5 +15,9 @@ export const routes = [
             { path: "/interview", element: <InterviewRoomListPage /> },
             { path: "/interview/room/:roomId", element: <InterviewRoomPage /> },
         ],
+    },
+    {
+        element: <DefaultLayout />,
+        children: interviewerRoutes,
     },
 ];
