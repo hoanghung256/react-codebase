@@ -10,37 +10,42 @@ import "codemirror/mode/python/python";
 import "codemirror/mode/clike/clike";
 import "codemirror/mode/lua/lua";
 import { Box, Select, MenuItem, Typography } from "@mui/material";
+import QuestionPanel from "./QuestionPanel";
+import VideoPanel from "./VideoPanel";
 
 const ICE_SERVERS = [{ urls: "stun:stun.l.google.com:19302" }];
 
 const languages = {
     python: {
         mode: "python",
-        example: "print(\"Hello, World!\")",
+        example: 'print("Hello, World!")',
     },
     javascript: {
         mode: "javascript",
-        example: "console.log(\"Hello, World!\");",
+        example: 'console.log("Hello, World!");',
     },
     java: {
         mode: "text/x-java",
-        example: "import java.util.*;\n\npublic class Main {\n    public static void main(String[] args) {\n      System.out.println(\"Hello, World!\");\n  }\n}",
+        example:
+            'import java.util.*;\n\npublic class Main {\n    public static void main(String[] args) {\n      System.out.println("Hello, World!");\n  }\n}',
     },
     csharp: {
         mode: "text/x-csharp",
-        example: "using System;\nusing System.Collections.Generic;\nusing System.Linq;\nusing System.Text.RegularExpressions;\n\nnamespace HelloWorld\n{\n\tpublic class Program\n\t{\n\t\tpublic static void Main(string[] args)\n\t\t{\n\t\t\tConsole.WriteLine(\"Hello, World!\");\n\t\t}\n\t}\n}",
+        example:
+            'using System;\nusing System.Collections.Generic;\nusing System.Linq;\nusing System.Text.RegularExpressions;\n\nnamespace HelloWorld\n{\n\tpublic class Program\n\t{\n\t\tpublic static void Main(string[] args)\n\t\t{\n\t\t\tConsole.WriteLine("Hello, World!");\n\t\t}\n\t}\n}',
     },
     c: {
         mode: "text/x-csrc",
-        example: "#include <stdio.h>\nint main()\n{\n    printf(\"Hello, World!\");\n}",
+        example: '#include <stdio.h>\nint main()\n{\n    printf("Hello, World!");\n}',
     },
     "c++": {
         mode: "text/x-c++src",
-        example: "#include <iostream>\nusing namespace std;\n\nint main() \n{\n    cout << \"Hello, World!\";\n    return 0;\n}",
+        example:
+            '#include <iostream>\nusing namespace std;\n\nint main() \n{\n    cout << "Hello, World!";\n    return 0;\n}',
     },
     lua: {
         mode: "lua",
-        example: "print (\"Hello, World!\")",
+        example: 'print ("Hello, World!")',
     },
 };
 
@@ -57,6 +62,14 @@ function InterviewRoomPage() {
     const [peers, setPeers] = useState([]);
     const [language, setLanguage] = useState("javascript");
     const [code, setCode] = useState(languages.javascript.example);
+
+    // Media and signaling related state/refs (missing earlier)
+    const [isCameraOn, setIsCameraOn] = useState(false);
+    const [isMicOn, setIsMicOn] = useState(false);
+    const [isRemoteAudioOn, setIsRemoteAudioOn] = useState(false);
+    const localStreamRef = useRef(null);
+    const remotePeerIdRef = useRef(null);
+    const iceCandidatesQueue = useRef([]);
 
     // --- Resizable layout state ---
     const containerRef = useRef(null);
@@ -152,31 +165,116 @@ function InterviewRoomPage() {
                 if (!p.includes(connectionId) && connectionId !== selfId) return [...p, connectionId];
                 return p;
             });
+            // Initiate call as existing participant if we already have media
+            if (!pcRef.current && (isCameraOn || isMicOn)) {
+                remotePeerIdRef.current = connectionId;
+                call(connectionId);
+            }
         });
 
         conn.on("UserLeft", (connectionId) => {
             setPeers((p) => p.filter((x) => x !== connectionId));
         });
 
+        // Receive list of existing peers when we join
+        conn.on("ExistingPeers", (existing) => {
+            console.log("ExistingPeers", existing);
+            setPeers(existing.filter((id) => id !== conn.connectionId));
+        });
+
         conn.on("ReceiveOffer", async (fromId, sdp) => {
             console.log("ReceiveOffer from", fromId);
-            await createPeerConnection(fromId, false);
+            remotePeerIdRef.current = fromId;
+
+            // Create PC if missing (answerer path)
+            if (!pcRef.current) {
+                await createPeerConnection(fromId, false);
+            }
+
+            // Set remote description
             await pcRef.current.setRemoteDescription({ type: "offer", sdp });
+
+            // Acquire local media if user already toggled cam/mic but stream not initialized yet
+            if ((isCameraOn || isMicOn) && !localStreamRef.current) {
+                try {
+                    const constraints = { video: isCameraOn, audio: isMicOn };
+                    const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                    localStreamRef.current = stream;
+                    localVideoRef.current.srcObject = stream;
+                    stream.getTracks().forEach((track) => pcRef.current.addTrack(track, stream));
+                    console.log(
+                        "Added local tracks during answer path:",
+                        stream.getTracks().map((t) => t.kind),
+                    );
+                } catch (err) {
+                    console.warn("Failed to get local media for answer path", err);
+                }
+            }
+
+            // Ensure existing local tracks are attached (replace if needed)
+            if (localStreamRef.current) {
+                const tracks = localStreamRef.current.getTracks();
+                const senders = pcRef.current.getSenders();
+                tracks.forEach((track) => {
+                    const senderSameKind = senders.find((s) => s.track?.kind === track.kind);
+                    if (!senderSameKind) {
+                        console.log("Attaching missing", track.kind, "track before answering");
+                        pcRef.current.addTrack(track, localStreamRef.current);
+                    }
+                });
+            }
+
+            // Flush queued ICE candidates (if any)
+            while (iceCandidatesQueue.current.length > 0) {
+                const candidate = iceCandidatesQueue.current.shift();
+                try {
+                    await pcRef.current.addIceCandidate(candidate);
+                    console.log("Added queued ICE candidate");
+                } catch (e) {
+                    console.error("Error adding queued ICE candidate", e);
+                }
+            }
+
+            // Create answer
             const answer = await pcRef.current.createAnswer();
             await pcRef.current.setLocalDescription(answer);
             conn.invoke("SendAnswer", fromId, answer.sdp);
+            console.log(
+                "Sent answer to",
+                fromId,
+                "with",
+                localStreamRef.current?.getTracks().length || 0,
+                "local tracks",
+            );
         });
 
         conn.on("ReceiveAnswer", async (fromId, sdp) => {
             console.log("ReceiveAnswer from", fromId);
             if (!pcRef.current) return;
             await pcRef.current.setRemoteDescription({ type: "answer", sdp });
+            // Flush any queued ICE now that remote description is set
+            while (iceCandidatesQueue.current.length > 0) {
+                const cand = iceCandidatesQueue.current.shift();
+                try {
+                    await pcRef.current.addIceCandidate(cand);
+                    console.log("Added queued ICE after answer");
+                } catch (e) {
+                    console.error("Error adding queued ICE after answer", e);
+                }
+            }
         });
 
         conn.on("ReceiveIceCandidate", async (fromId, candidate) => {
             try {
                 if (pcRef.current && candidate) {
-                    await pcRef.current.addIceCandidate(JSON.parse(candidate));
+                    const ice = JSON.parse(candidate);
+                    if (!pcRef.current.remoteDescription) {
+                        // Queue until remote description is set
+                        iceCandidatesQueue.current.push(ice);
+                        console.log("Queued ICE candidate (no remoteDescription yet)");
+                    } else {
+                        await pcRef.current.addIceCandidate(ice);
+                    }
                 }
             } catch (e) {
                 console.error("addIceCandidate error", e);
@@ -207,10 +305,161 @@ function InterviewRoomPage() {
         };
     }, [roomId, user?.id, user?.role]);
 
-    async function startLocalStream() {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    async function startLocalStream({ video = true, audio = true } = {}) {
+        if (localStreamRef.current) return localStreamRef.current;
+        const stream = await navigator.mediaDevices.getUserMedia({ video, audio });
+        localStreamRef.current = stream;
         localVideoRef.current.srcObject = stream;
         return stream;
+    }
+
+    async function toggleCamera() {
+        try {
+            if (isCameraOn) {
+                // Turn off camera
+                if (localStreamRef.current) {
+                    const videoTrack = localStreamRef.current.getVideoTracks()[0];
+                    if (videoTrack) {
+                        videoTrack.stop();
+                        localStreamRef.current.removeTrack(videoTrack);
+                    }
+                }
+
+                // Remove from peer connection
+                if (pcRef.current) {
+                    const sender = pcRef.current.getSenders().find((s) => s.track?.kind === "video");
+                    if (sender) {
+                        pcRef.current.removeTrack(sender);
+                    }
+                }
+
+                setIsCameraOn(false);
+            } else {
+                // Turn on camera
+                // Acquire / add video track
+                const videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                const videoTrack = videoStream.getVideoTracks()[0];
+                if (!localStreamRef.current) localStreamRef.current = new MediaStream();
+                localStreamRef.current.addTrack(videoTrack);
+                localVideoRef.current.srcObject = localStreamRef.current;
+
+                // Add to peer connection if exists and renegotiate
+                if (pcRef.current && connRef.current) {
+                    const sender = pcRef.current.getSenders().find((s) => s.track?.kind === "video");
+                    if (sender) {
+                        await sender.replaceTrack(videoTrack);
+                    } else {
+                        pcRef.current.addTrack(videoTrack, localStreamRef.current);
+                    }
+
+                    // Check signaling state before renegotiation
+                    if (pcRef.current.signalingState === "stable") {
+                        // Renegotiate: create new offer
+                        const offer = await pcRef.current.createOffer();
+                        await pcRef.current.setLocalDescription(offer);
+
+                        // Send to the connected peer
+                        const targetPeer = remotePeerIdRef.current || peers[0];
+                        if (targetPeer) {
+                            await connRef.current.invoke("SendOffer", targetPeer, offer.sdp);
+                            console.log("Sent renegotiation offer to", targetPeer, "after camera toggle");
+                        } else {
+                            console.warn("No peer to send renegotiation offer");
+                        }
+                    } else {
+                        console.warn("Cannot renegotiate, signaling state is:", pcRef.current.signalingState);
+                    }
+                } else if (!pcRef.current && connRef.current) {
+                    // Not connected yet: if we already have peers, initiate the call
+                    const targetPeer = peers[0];
+                    if (targetPeer) {
+                        remotePeerIdRef.current = targetPeer;
+                        await call(targetPeer);
+                        console.log("Initiated call to", targetPeer, "after camera turned on");
+                    } else {
+                        console.log("Camera on but no peer available to call yet");
+                    }
+                }
+
+                setIsCameraOn(true);
+            }
+        } catch (err) {
+            console.error("Error toggling camera:", err);
+        }
+    }
+
+    async function toggleMic() {
+        try {
+            if (isMicOn) {
+                // Turn off mic: stop and remove track
+                if (localStreamRef.current) {
+                    const audioTrack = localStreamRef.current.getAudioTracks()[0];
+                    if (audioTrack) {
+                        audioTrack.stop();
+                        localStreamRef.current.removeTrack(audioTrack);
+                    }
+                }
+
+                if (pcRef.current) {
+                    const sender = pcRef.current.getSenders().find((s) => s.track?.kind === "audio");
+                    if (sender) {
+                        pcRef.current.removeTrack(sender);
+                    }
+                }
+
+                setIsMicOn(false);
+            } else {
+                // Turn on mic: get track, add, and renegotiate
+                const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                const audioTrack = audioStream.getAudioTracks()[0];
+                if (!localStreamRef.current) localStreamRef.current = new MediaStream();
+                if (audioTrack) {
+                    localStreamRef.current.addTrack(audioTrack);
+                    localVideoRef.current.srcObject = localStreamRef.current;
+
+                    if (pcRef.current && connRef.current) {
+                        const sender = pcRef.current.getSenders().find((s) => s.track?.kind === "audio");
+                        if (sender) {
+                            await sender.replaceTrack(audioTrack);
+                        } else {
+                            pcRef.current.addTrack(audioTrack, localStreamRef.current);
+                        }
+
+                        // Check signaling state before renegotiation
+                        if (pcRef.current.signalingState === "stable") {
+                            const offer = await pcRef.current.createOffer();
+                            await pcRef.current.setLocalDescription(offer);
+                            const targetPeer = remotePeerIdRef.current || peers[0];
+                            if (targetPeer) {
+                                await connRef.current.invoke("SendOffer", targetPeer, offer.sdp);
+                                console.log("Sent renegotiation offer to", targetPeer, "after mic toggle");
+                            }
+                        } else {
+                            console.warn("Cannot renegotiate, signaling state is:", pcRef.current.signalingState);
+                        }
+                    }
+                }
+
+                setIsMicOn(true);
+            }
+        } catch (err) {
+            console.error("Error toggling mic:", err);
+        }
+    }
+
+    function toggleRemoteAudio() {
+        try {
+            if (!remoteVideoRef.current) return;
+            const next = !isRemoteAudioOn;
+            remoteVideoRef.current.muted = !next;
+            if (next) {
+                // user gesture may be required; ensure play is called
+                remoteVideoRef.current.play().catch((e) => console.warn("Remote audio play blocked:", e));
+            }
+            setIsRemoteAudioOn(next);
+        } catch (e) {
+            console.warn("toggleRemoteAudio error:", e);
+        }
     }
 
     async function createPeerConnection(targetId, isOfferer) {
@@ -228,11 +477,36 @@ function InterviewRoomPage() {
         };
 
         pcRef.current.ontrack = (e) => {
-            remoteVideoRef.current.srcObject = e.streams[0];
+            console.log("✅ Received remote track:", e.track.kind, "enabled:", e.track.enabled);
+            if (remoteVideoRef.current && e.streams[0]) {
+                remoteVideoRef.current.srcObject = e.streams[0];
+                console.log("Set remote video srcObject");
+            }
         };
 
-        const localStream = await startLocalStream();
-        localStream.getTracks().forEach((t) => pcRef.current.addTrack(t, localStream));
+        pcRef.current.onnegotiationneeded = async () => {
+            console.log("⚠️ Negotiation needed");
+        };
+
+        pcRef.current.oniceconnectionstatechange = () => {
+            console.log("ICE connection state:", pcRef.current.iceConnectionState);
+        };
+
+        pcRef.current.onconnectionstatechange = () => {
+            console.log("Connection state:", pcRef.current.connectionState);
+        };
+
+        // Add existing local stream tracks if any
+        if (localStreamRef.current) {
+            const tracks = localStreamRef.current.getTracks();
+            console.log(`Adding ${tracks.length} local tracks to peer connection`);
+            tracks.forEach((track) => {
+                console.log("  - Adding local track:", track.kind, "enabled:", track.enabled);
+                pcRef.current.addTrack(track, localStreamRef.current);
+            });
+        } else {
+            console.log("No local stream to add to peer connection");
+        }
 
         if (isOfferer) {
             const offer = await pcRef.current.createOffer();
@@ -247,14 +521,17 @@ function InterviewRoomPage() {
 
     const leaveRoom = () => {
         if (connRef.current) {
-            connRef.current.invoke("LeaveRoom", roomId).then(() => {
-                navigate("/interview");
-            }).catch(console.error);
+            connRef.current
+                .invoke("LeaveRoom", roomId)
+                .then(() => {
+                    navigate("/interview");
+                })
+                .catch(console.error);
         }
     };
 
     const handleCodeChange = (editor, data, value) => {
-        if (data.origin !== 'setValue' && user?.role !== 1) {
+        if (data.origin !== "setValue" && user?.role !== 1) {
             setCode(value);
             if (connRef.current) {
                 connRef.current.invoke("SendCode", roomId, value);
@@ -287,23 +564,18 @@ function InterviewRoomPage() {
     };
 
     return (
-        <Box style={{ display: "flex", flexDirection: "column", height: "100vh" }}>
-            <header
-                style={{
-                    padding: "10px 16px",
-                    borderBottom: "1px solid #e5e7eb",
-                    background: "#fafafa",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                }}
-            >
-                <div>
-                    <strong>Interview Room:</strong> {roomId}
-                </div>
-                <button onClick={leaveRoom}>Leave Room</button>
-            </header>
+        <Box sx={{ display: "flex", flexDirection: "column", height: "100vh" }}>
+            {/* Header */}
+            {/* <AppBar position="static" color="default" elevation={1}>
+                <Toolbar>
+                    <Typography variant="h6" sx={{ flexGrow: 1 }}>
+                        Interview Room: <strong>{roomId}</strong>
+                    </Typography>
+                    
+                </Toolbar>
+            </AppBar> */}
 
+            {/* Resizable 3-column layout */}
             <Box
                 ref={containerRef}
                 style={{
@@ -322,7 +594,7 @@ function InterviewRoomPage() {
                         borderRight: "1px solid #eee",
                     }}
                 >
-                    White board for question paper(plain text)
+                    <QuestionPanel conn={connRef.current} roomId={roomId} />
                 </Box>
 
                 <div style={resizerStyle} onMouseDown={(e) => startDrag(e, 0)} />
@@ -337,12 +609,8 @@ function InterviewRoomPage() {
                     }}
                 >
                     {user?.role === 0 && (
-                        <Select
-                            value={language}
-                            onChange={handleLanguageChange}
-                            sx={{ mb: 1, minWidth: 120 }}
-                        >
-                            {Object.keys(languages).map(lang => (
+                        <Select value={language} onChange={handleLanguageChange} sx={{ mb: 1, minWidth: 120 }}>
+                            {Object.keys(languages).map((lang) => (
                                 <MenuItem key={lang} value={lang}>
                                     {lang.charAt(0).toUpperCase() + lang.slice(1)}
                                 </MenuItem>
@@ -365,7 +633,7 @@ function InterviewRoomPage() {
                     <Box sx={{ border: "1px solid black" }}>
                         <CodeMirror
                             value={code}
-                            editorDidMount={editor => {
+                            editorDidMount={(editor) => {
                                 editorRef.current = editor;
                             }}
                             options={{
@@ -388,38 +656,18 @@ function InterviewRoomPage() {
                         padding: 1.5,
                     }}
                 >
-                    <h3 style={{ marginTop: 0 }}>Info</h3>
-                    <p>My id: {myId}</p>
-                    <p>Peers: {peers.length}</p>
-
-                    <h3 style={{ marginTop: 0 }}>Peers</h3>
-                    <ul style={{ paddingLeft: 18 }}>
-                        {peers.map((p) => (
-                            <li key={p} style={{ marginBottom: 8 }}>
-                                <code>{p}</code>
-                                <button onClick={() => call(p)} style={{ marginLeft: 8 }}>
-                                    Call
-                                </button>
-                            </li>
-                        ))}
-                    </ul>
-
-                    <h3 style={{ marginTop: 0 }}>Video</h3>
-                    <div>
-                        <video
-                            ref={localVideoRef}
-                            autoPlay
-                            playsInline
-                            muted
-                            style={{ width: "100%", borderRadius: 8, background: "#000" }}
-                        />
-                        <video
-                            ref={remoteVideoRef}
-                            autoPlay
-                            playsInline
-                            style={{ width: "100%", borderRadius: 8, background: "#000" }}
-                        />
-                    </div>
+                    <VideoPanel
+                        myId={myId}
+                        peers={peers}
+                        onCall={call}
+                        localVideoRef={localVideoRef}
+                        remoteVideoRef={remoteVideoRef}
+                        isCameraOn={isCameraOn}
+                        isMicOn={isMicOn}
+                        onToggleCamera={toggleCamera}
+                        onToggleMic={toggleMic}
+                        onLeaveRoom={leaveRoom}
+                    />
                 </Box>
             </Box>
         </Box>
