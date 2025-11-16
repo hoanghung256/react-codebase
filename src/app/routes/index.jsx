@@ -3,19 +3,19 @@ import InterviewRoomListPage from "../../features/interview/pages/InterviewRoomL
 import InterviewRoomPage from "../../features/interview/pages/InterviewRoomPage/InterviewRoomPage";
 import HomePage from "../../features/home/pages/HomePage";
 import AuthLayout from "../layouts/AuthLayout";
-import DefaultLayout from "../layouts/DefaultLayout";
+import MainLayout from "../layouts/MainLayout";
 import { authRoutes } from "./authRoutes";
 import { intervieweeRoutes } from "./intervieweeRoutes";
 
 export const routes = [
     { element: <AuthLayout />, children: authRoutes },
     {
-        element: <DefaultLayout />,
+        element: <MainLayout />,
         children: [
             { path: "/test", element: <App /> },
             { path: "/interview", element: <InterviewRoomListPage /> },
             { path: "/interview/room/:roomId", element: <InterviewRoomPage /> },
         ],
     },
-    {element: <DefaultLayout />, children: intervieweeRoutes}
+    {element: <MainLayout />, children: intervieweeRoutes}
 ];
