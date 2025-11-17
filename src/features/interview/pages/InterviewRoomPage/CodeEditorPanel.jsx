@@ -1,10 +1,11 @@
-import { Box, Button, CircularProgress, IconButton, MenuItem, Select, Stack, Tooltip, Typography } from "@mui/material";
+import { Box, Button, CircularProgress, IconButton, MenuItem, Paper, Select, Stack, Tooltip, Typography } from "@mui/material";
 import CodeIcon from "@mui/icons-material/Code";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import ClearIcon from "@mui/icons-material/Clear";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
 import Editor from "@monaco-editor/react";
+import { useEffect, useRef } from "react";
 
 function CodeEditorPanel({
     languages,
@@ -20,8 +21,49 @@ function CodeEditorPanel({
     testResults,
     setTestResults,
     user,
-    handleEditorMount 
+    handleEditorMount,
 }) {
+    // Keep a stable ref to editor and its container to drive layout
+    const editorRef = useRef(null);
+    const editorContainerRef = useRef(null);
+
+    useEffect(() => {
+        if (!editorContainerRef.current) return;
+
+        const layout = () => {
+            try {
+                editorRef.current?.layout();
+            } catch {}
+        };
+
+        // Layout on window resize
+        window.addEventListener("resize", layout);
+
+        // Layout when the container resizes (tabs, split panes, accordions, etc.)
+        const ro = new ResizeObserver(layout);
+        ro.observe(editorContainerRef.current);
+
+        // Layout after first paint (fixes initial mount in hidden tabs)
+        const id = setTimeout(layout, 0);
+
+        return () => {
+            window.removeEventListener("resize", layout);
+            ro.disconnect();
+            clearTimeout(id);
+        };
+    }, []);
+
+    const onEditorMount = (editor, monaco) => {
+        editorRef.current = editor;
+        // Initial layout to avoid white overlay when parent size was 0 at mount
+        editor.layout();
+
+        // Pass through to parent if provided
+        if (typeof handleEditorMount === "function") {
+            handleEditorMount(editor, monaco);
+        }
+    };
+
     return (
         <Box
             sx={{
@@ -31,6 +73,9 @@ function CodeEditorPanel({
                 minHeight: 0,
                 border: "1px solid #ccc",
                 borderRadius: 1,
+                backgroundColor: "background.paper",
+                // đảm bảo panel chiếm hết chiều cao cha nếu cha dùng flex
+                height: "100%",
             }}
         >
             {/* Toolbar */}
@@ -38,7 +83,13 @@ function CodeEditorPanel({
                 direction="row"
                 spacing={1}
                 alignItems="center"
-                sx={{ px: 1, py: 0.5, borderBottom: "1px solid #ccc", background: "#f9f9f9" }}
+                sx={{
+                    px: 1,
+                    py: 0.5,
+                    borderBottom: "1px solid #ccc",
+                    background: "#f9f9f9",
+                    flexShrink: 0,
+                }}
             >
                 {user?.role === 0 ? (
                     <Select
@@ -81,13 +132,25 @@ function CodeEditorPanel({
                 )}
             </Stack>
 
-            {/* Editor */}
-            <Box sx={{ flex: "1 1 60%", minHeight: 200, position: "relative" }}>
+            {/* Editor responsive */}
+            <Box
+                ref={editorContainerRef}
+                sx={{
+                    flex: 1, // chiếm toàn bộ phần còn lại trừ console
+                    minHeight: 0, // cần để flex children không overflow
+                    position: "relative",
+                    "& .monaco-editor, & .monaco-editor .overflow-guard": {
+                        position: "absolute",
+                        inset: 0,
+                    },
+                }}
+            >
                 <Editor
-                    height="100%"
+                    key={language}
+                    height="100%" // sẽ fill tuyệt đối container
                     language={language}
                     value={code}
-                    onMount={handleEditorMount}
+                    onMount={onEditorMount}
                     onChange={handleCodeChange}
                     options={{
                         readOnly: user?.role === 1,
@@ -99,14 +162,16 @@ function CodeEditorPanel({
                 />
             </Box>
 
-            {/* Console */}
+            {/* Console (co giãn – có thể đổi sang collapsible nếu muốn) */}
             <Box
                 sx={{
-                    flex: "1 1 40%",
+                    flexBasis: { xs: 140, sm: 180, md: 220 }, // responsive base height
+                    flexShrink: 0,
                     display: "flex",
                     flexDirection: "column",
-                    minHeight: 100,
+                    minHeight: 120,
                     borderTop: "1px solid #ccc",
+                    background: "#fafafa",
                 }}
             >
                 <Stack
@@ -145,6 +210,7 @@ function CodeEditorPanel({
                         overflowY: "auto",
                         whiteSpace: "pre-wrap",
                         flex: 1,
+                        minHeight: 0,
                     }}
                 >
                     {testResults ? (

@@ -5,7 +5,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
 import DOMPurify from "dompurify";
-import { Box, Typography, Paper, TextField, Tabs, Tab, Stack } from "@mui/material";
+import { Box, Typography, Paper, TextField, Tabs, Tab, Stack, Button, Tooltip, IconButton } from "@mui/material";
 
 function QuestionPanel({
     user,
@@ -20,8 +20,31 @@ function QuestionPanel({
     setTestCases,
     sendProblem,
     problemTab,
-    setProblemTab
+    setProblemTab,
+    activeTestCaseTab,
+    setActiveTestCaseTab,
+    addTestCase,
+    handleTestCaseInputChange,
+    handleTestCaseOutputChange,
+    addInputToTestCase,
+    removeInputFromTestCase,
+    removeExpectedOutput,
+    removeTestCase,
+    addExpectedOutput,
 }) {
+    console.log("data", problemData);
+    console.log("daproblemShortNameta", problemShortName);
+    const quillModules = {
+        toolbar: [
+            [{ header: [1, 2, 3, false] }],
+            ["bold", "italic", "underline", "strike"],
+            [{ script: "sub" }, { script: "super" }], // Superscript and Subscript
+            [{ list: "ordered" }, { list: "bullet" }],
+            ["link", "code-block"],
+            ["clean"],
+        ],
+    };
+
     return (
         <Box>
             {user?.role === 1 && (

@@ -17,37 +17,29 @@ import CodeEditorPanel from "./CodeEditorPanel";
 const ICE_SERVERS = [{ urls: "stun:stun.l.google.com:19302" }];
 
 const languages = {
-    python: {
-        mode: "python",
-        example: 'print("Hello, World!")',
-    },
+    // python: {
+    //     example: "print(\"Hello, World!\")",
+    // },
     javascript: {
-        mode: "javascript",
         example: 'console.log("Hello, World!");',
     },
     java: {
-        mode: "text/x-java",
         example:
             'import java.util.*;\n\npublic class Main {\n    public static void main(String[] args) {\n      System.out.println("Hello, World!");\n  }\n}',
     },
     csharp: {
-        mode: "text/x-csharp",
         example:
             'using System;\nusing System.Collections.Generic;\nusing System.Linq;\nusing System.Text.RegularExpressions;\n\nnamespace HelloWorld\n{\n\tpublic class Program\n\t{\n\t\tpublic static void Main(string[] args)\n\t\t{\n\t\t\tConsole.WriteLine("Hello, World!");\n\t\t}\n\t}\n}',
     },
-    c: {
-        mode: "text/x-csrc",
-        example: '#include <stdio.h>\nint main()\n{\n    printf("Hello, World!");\n}',
-    },
-    "c++": {
-        mode: "text/x-c++src",
-        example:
-            '#include <iostream>\nusing namespace std;\n\nint main() \n{\n    cout << "Hello, World!";\n    return 0;\n}',
-    },
-    lua: {
-        mode: "lua",
-        example: 'print ("Hello, World!")',
-    },
+    // c: {
+    //     example: "#include <stdio.h>\nint main()\n{\n    printf(\"Hello, World!\");\n}",
+    // },
+    // 'c++': {
+    //     example: "#include <iostream>\nusing namespace std;\n\nint main() \n{\n    cout << \"Hello, World!\";\n    return 0;\n}",
+    // },
+    // lua: {
+    //     example: "print (\"Hello, World!\")",
+    // },
 };
 
 function InterviewRoomPage() {
@@ -77,9 +69,6 @@ function InterviewRoomPage() {
     const [activeTestCaseTab, setActiveTestCaseTab] = useState(0);
     const [isEditingProblem, setIsEditingProblem] = useState(false);
     const [problemTab, setProblemTab] = useState(0);
-    const problemData =
-        receivedProblem ||
-        (user?.role === 1 ? { description: problemDescription, shortName: problemShortName, testCases } : null);
 
     // Media and signaling related state/refs (missing earlier)
     const [isCameraOn, setIsCameraOn] = useState(false);
@@ -105,6 +94,11 @@ function InterviewRoomPage() {
             containerWidth: rect.width,
         });
     };
+
+    const problemData =
+        user?.role === 1
+            ? { description: problemDescription, shortName: problemShortName, testCases }
+            : receivedProblem;
 
     useEffect(() => {
         if (!dragging) return;
@@ -174,6 +168,12 @@ function InterviewRoomPage() {
         conn.onreconnected?.((newId) => {
             setMyId(newId ?? null);
             console.log("Reconnected with id:", newId);
+            // Re-join the room with the new connection ID
+            conn.invoke("JoinRoom", roomId)
+                .then(() => {
+                    console.log("Re-joined room", roomId, "with new connection ID:", newId);
+                })
+                .catch(console.error);
         });
 
         conn.on("UserJoined", (connectionId) => {
@@ -845,6 +845,7 @@ function InterviewRoomPage() {
                     }}
                 >
                     <QuestionPanel
+                        user={user}
                         isEditingProblem={isEditingProblem}
                         setIsEditingProblem={setIsEditingProblem}
                         problemDescription={problemDescription}
@@ -857,6 +858,16 @@ function InterviewRoomPage() {
                         problemTab={problemTab}
                         problemData={problemData}
                         setProblemTab={setProblemTab}
+                        activeTestCaseTab={activeTestCaseTab}
+                        setActiveTestCaseTab={setActiveTestCaseTab}
+                        addTestCase={addTestCase}
+                        handleTestCaseInputChange={handleTestCaseInputChange}
+                        handleTestCaseOutputChange={handleTestCaseOutputChange}
+                        addInputToTestCase={addInputToTestCase}
+                        removeInputFromTestCase={removeInputFromTestCase}
+                        removeTestCase={removeTestCase}
+                        addExpectedOutput={addExpectedOutput}
+                        removeExpectedOutput={removeExpectedOutput}
                     />
                 </Box>
 
