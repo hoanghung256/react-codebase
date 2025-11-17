@@ -3,6 +3,7 @@ import InterviewRoomListPage from "../../features/interview/pages/InterviewRoomL
 import InterviewRoomPage from "../../features/interview/pages/InterviewRoomPage/InterviewRoomPage";
 import AuthLayout from "../layouts/AuthLayout";
 import DefaultLayout from "../layouts/DefaultLayout";
+import { adminRoutes } from "./adminRoutes";
 import { authRoutes } from "./authRoutes";
 import { interviewerRoutes } from "./interviewerRoutes";
 
@@ -19,5 +20,9 @@ export const routes = [
     {
         element: <DefaultLayout />,
         children: interviewerRoutes,
+    },
+    {
+        element: <DefaultLayout />,
+        children: adminRoutes,
     },
 ];

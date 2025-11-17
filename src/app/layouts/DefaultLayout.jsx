@@ -1,21 +1,14 @@
-import { Outlet, useNavigate } from "react-router-dom";
+import { Link, Outlet, useNavigate } from "react-router-dom";
 import ScrollTopFab from "./ScrollTopFab";
 import useUser from "../../common/hooks/useUser";
-import {
-    AppBar,
-    Toolbar,
-    Container,
-    Typography,
-    Box,
-    CssBaseline,
-    Button,
-} from "@mui/material";
+import { AppBar, Toolbar, Container, Typography, Box, CssBaseline, Button, Avatar } from "@mui/material";
 import { useDispatch } from "react-redux";
 import { setToken, setUserData } from "../../common/store/authSlice";
 
 const DefaultLayout = () => {
     const user = useUser();
-    const fullName = user?.fullName || "Guest";
+    const avatarUrl = user?.profilePicture || "";
+    // const fullName = user?.fullName || "Guest";
     const navigate = useNavigate();
     const dispatch = useDispatch();
 
@@ -37,9 +30,9 @@ const DefaultLayout = () => {
                         <Typography variant="h6" sx={{ fontWeight: 700, flexGrow: 1 }}>
                             Intervu
                         </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                            {fullName}
-                        </Typography>
+                        <Link to="/profile">
+                            <Avatar src={avatarUrl} alt="Profile" variant="body2" color="text.secondary" />
+                        </Link>
                         <Button variant="outlined" sx={{ ml: 2 }} onClick={logout}>
                             Sign Out
                         </Button>
