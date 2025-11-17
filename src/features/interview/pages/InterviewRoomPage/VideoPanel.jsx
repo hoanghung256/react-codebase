@@ -24,6 +24,8 @@ function VideoPanel({
     onToggleCamera,
     onToggleMic,
     onLeaveRoom,
+    user,
+    endMeeting,
 }) {
     return (
         <Box

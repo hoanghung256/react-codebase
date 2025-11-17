@@ -51,7 +51,8 @@ function InterviewRoomPage() {
     const [myId, setMyId] = useState(null);
     const [peers, setPeers] = useState([]);
     const [language, setLanguage] = useState("java");
-    const [code, setCode] = useState(languages.java.example);
+    const [roomLanguageCodeMap, setRoomLanguageCodeMap] = useState({});
+    // const [code, setCode] = useState(languages.java.example);
     const [consoleOutput, setConsoleOutput] = useState(null);
     const [testResults, setTestResults] = useState(null);
     const [isRunning, setIsRunning] = useState(false);
@@ -195,6 +196,31 @@ function InterviewRoomPage() {
             setPeers(existing.filter((id) => id !== conn.connectionId));
         });
 
+        // New handler for receiving the full initial state upon joining
+        conn.on("ReceiveFullState", (roomState) => {
+            console.log("Received initial room state:", roomState);
+            if (roomState) {
+                const { currentLanguage, languageCodes } = roomState;
+                setLanguage(currentLanguage);
+
+                // Check if the received map has code for the current language.
+                // If not, use the example code as a fallback.
+                const initialCode = languageCodes?.[currentLanguage] || languages[currentLanguage]?.example || "";
+                const initialCodeMap = languageCodes || {};
+
+                // Ensure the map has an entry for the current language's code
+                if (!initialCodeMap[currentLanguage]) {
+                    initialCodeMap[currentLanguage] = initialCode;
+                }
+
+                setRoomLanguageCodeMap(initialCodeMap);
+                setReceivedProblem({ description: roomState.problemDescription, shortName: roomState.problemShortName, testCases: roomState.testCases });
+                setProblemDescription(roomState.problemDescription);
+                setProblemShortName(roomState.problemShortName);
+                setTestCases(roomState.testCases || [{ inputs: [{ name: "", value: "" }], expectedOutputs: [""] }]);
+            }
+        });
+
         conn.on("ReceiveOffer", async (fromId, sdp) => {
             console.log("ReceiveOffer from", fromId);
             remotePeerIdRef.current = fromId;
@@ -294,24 +320,29 @@ function InterviewRoomPage() {
             }
         });
 
-        conn.on("ReceiveCode", (newCode) => {
-            if (editorRef.current && editorRef.current.getValue() !== newCode) {
+        conn.on("ReceiveCode", (changes, codeLang) => {
+            if (language === codeLang && editorRef.current) {
                 isExternalChange.current = true;
-                const position = editorRef.current.getPosition();
-                editorRef.current.setValue(newCode);
-                if (position) {
-                    editorRef.current.setPosition(position);
+                // Apply the changes received from the server
+                const currentPosition = editorRef.current.getPosition();
+                editorRef.current.executeEdits("remote", changes);
+                if (currentPosition) {
+                    editorRef.current.setPosition(currentPosition);
                 }
                 isExternalChange.current = false;
+
+                // Update the central map with the new code value after applying edits
             }
         });
 
-        conn.on("ReceiveLanguage", (lang, initialCode) => {
+        conn.on("ReceiveLanguage", (lang, codeForLang) => {
             setLanguage(lang);
-            setCode(initialCode);
+            const newCode = codeForLang ?? (languages[lang]?.example || "");
+            setRoomLanguageCodeMap(prevMap => ({ ...prevMap, [lang]: newCode }));
+
             if (editorRef.current) {
                 isExternalChange.current = true;
-                editorRef.current.setValue(initialCode);
+                editorRef.current.setValue(newCode);
                 isExternalChange.current = false;
             }
         });
@@ -577,34 +608,49 @@ function InterviewRoomPage() {
         }
     };
 
-    const handleCodeChange = (value) => {
+    const handleCodeChange = (value, event) => {
         if (isExternalChange.current) {
             return;
         }
 
-        if (user?.role !== 1 && connRef.current) {
-            // Debounce the SendCode invocation
-            if (sendCodeTimeout.current) {
-                clearTimeout(sendCodeTimeout.current);
-            }
-            sendCodeTimeout.current = setTimeout(() => {
-                connRef.current.invoke("SendCode", roomId, value);
-            }, 500); // Adjust the delay as needed
+        // The candidate sends the changes to the server.
+        // The interviewer's changes are local until they run code or change language.
+        if (user?.role !== 1 && connRef.current && event.changes.length > 0) {
+            // No need to debounce when sending lightweight changes
+            connRef.current.invoke("SendCode", roomId, event.changes, language);
         }
    };
 
     const handleLanguageChange = (e) => {
         const newLang = e.target.value;
+        const oldLang = language;
         setLanguage(newLang);
-        const newCode = languages[newLang].example;
-        setCode(newCode);
-
-        if (editorRef.current) {
-            editorRef.current.setValue(newCode);
-        }
 
         if (connRef.current) {
-            connRef.current.invoke("SendLanguage", roomId, newLang, newCode);
+            const oldCode = editorRef.current?.getValue();
+            connRef.current.invoke("SendCode", roomId, oldCode, oldLang);
+        }
+        // const newCode = languages[newLang].example;
+        // setCode(newCode);
+
+        // Determine the code to load for the new language
+        // Prioritize code from the map, otherwise use example code
+        const codeToLoad = roomLanguageCodeMap[newLang] || languages[newLang].example;
+
+        if (editorRef.current) {
+            isExternalChange.current = true; // Mark as external change to prevent immediate SendCode
+            editorRef.current.setValue(codeToLoad);
+            isExternalChange.current = false;
+        }
+
+        // Update the map with the newly loaded code (even if it was example code)
+        setRoomLanguageCodeMap(prevMap => ({
+            ...prevMap,
+            [newLang]: codeToLoad
+        }));
+
+        if (connRef.current) {
+            connRef.current.invoke("SendLanguage", roomId, newLang);
         }
     };
 
@@ -897,7 +943,7 @@ function InterviewRoomPage() {
                     <CodeEditorPanel
                         language={language}
                         handleLanguageChange={handleLanguageChange}
-                        code={code}
+                        code={roomLanguageCodeMap[language] || languages[language]?.example || ""}
                         handleCodeChange={handleCodeChange}
                         formatCode={formatCode}
                         runCode={runCode}
@@ -933,6 +979,7 @@ function InterviewRoomPage() {
                         onToggleCamera={toggleCamera}
                         onToggleMic={toggleMic}
                         onLeaveRoom={leaveRoom}
+                        user={user}
                     />
                 </Box>
             </Box>
