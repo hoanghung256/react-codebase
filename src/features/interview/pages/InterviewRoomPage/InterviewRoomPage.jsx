@@ -2,7 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { BE_BASE_URL } from "../../../../common/constants/env";
 import * as signalR from "@microsoft/signalr";
 import { useEffect, useRef, useState } from "react";
-import useUser from "../../../../common/hooks/useUser";
+import useUser from '../../../../common/hooks/useUser';
 import { Box } from "@mui/material";
 import QuestionPanel from "./QuestionPanel";
 import VideoPanel from "./VideoPanel";
@@ -47,10 +47,11 @@ function InterviewRoomPage() {
     const editorRef = useRef(null);
     const monacoRef = useRef(null);
     const isExternalChange = useRef(false);
+    const sendCodeTimeout = useRef(null);
     const [myId, setMyId] = useState(null);
     const [peers, setPeers] = useState([]);
-    const [language, setLanguage] = useState("javascript");
-    const [code, setCode] = useState(languages.javascript.example);
+    const [language, setLanguage] = useState("java");
+    const [code, setCode] = useState(languages.java.example);
     const [consoleOutput, setConsoleOutput] = useState(null);
     const [testResults, setTestResults] = useState(null);
     const [isRunning, setIsRunning] = useState(false);
@@ -580,11 +581,17 @@ function InterviewRoomPage() {
         if (isExternalChange.current) {
             return;
         }
-        setCode(value);
+
         if (user?.role !== 1 && connRef.current) {
-            connRef.current.invoke("SendCode", roomId, value);
+            // Debounce the SendCode invocation
+            if (sendCodeTimeout.current) {
+                clearTimeout(sendCodeTimeout.current);
+            }
+            sendCodeTimeout.current = setTimeout(() => {
+                connRef.current.invoke("SendCode", roomId, value);
+            }, 500); // Adjust the delay as needed
         }
-    };
+   };
 
     const handleLanguageChange = (e) => {
         const newLang = e.target.value;
