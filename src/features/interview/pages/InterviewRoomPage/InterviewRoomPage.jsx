@@ -3,7 +3,7 @@ import { BE_BASE_URL } from "../../../../common/constants/env";
 import * as signalR from "@microsoft/signalr";
 import { useEffect, useRef, useState } from "react";
 import useUser from "../../../../common/hooks/useUser";
-import { Box} from "@mui/material";
+import { Box } from "@mui/material";
 import QuestionPanel from "./QuestionPanel";
 import VideoPanel from "./VideoPanel";
 import CodeEditorPanel from "./CodeEditorPanel";
@@ -163,11 +163,11 @@ function InterviewRoomPage() {
             setMyId(newId ?? null);
             console.log("Reconnected with id:", newId);
             // Re-join the room with the new connection ID
-            conn.invoke("JoinRoom", roomId)
-                .then(() => {
-                    console.log("Re-joined room", roomId, "with new connection ID:", newId);
-                })
-                .catch(console.error);
+            // conn.invoke("JoinRoom", roomId)
+            //     .then(() => {
+            //         console.log("Re-joined room", roomId, "with new connection ID:", newId);
+            //     })
+            //     .catch(console.error);
         });
 
         conn.on("UserJoined", (connectionId) => {
@@ -523,6 +523,8 @@ function InterviewRoomPage() {
             if (remoteVideoRef.current && e.streams[0]) {
                 remoteVideoRef.current.srcObject = e.streams[0];
                 console.log("Set remote video srcObject");
+                // Force play in case browser pauses autoplay with audio
+                remoteVideoRef.current.play().catch((err) => console.warn("Remote video play blocked", err));
             }
         };
 
@@ -538,7 +540,7 @@ function InterviewRoomPage() {
             console.log("Connection state:", pcRef.current.connectionState);
         };
 
-        // Add existing local stream tracks if any
+        // Add existing local stream tracks if any; otherwise prime recvonly transceivers so we can receive remote media immediately.
         if (localStreamRef.current) {
             const tracks = localStreamRef.current.getTracks();
             console.log(`Adding ${tracks.length} local tracks to peer connection`);
@@ -547,7 +549,9 @@ function InterviewRoomPage() {
                 pcRef.current.addTrack(track, localStreamRef.current);
             });
         } else {
-            console.log("No local stream to add to peer connection");
+            console.log("No local stream to add; adding recvonly transceivers for video/audio");
+            pcRef.current.addTransceiver("video", { direction: "recvonly" });
+            pcRef.current.addTransceiver("audio", { direction: "recvonly" });
         }
 
         if (isOfferer) {
