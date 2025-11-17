@@ -6,16 +6,21 @@ import AuthLayout from "../layouts/AuthLayout";
 import DefaultLayout from "../layouts/DefaultLayout";
 import { authRoutes } from "./authRoutes";
 import { intervieweeRoutes } from "./intervieweeRoutes";
+import { Navigate } from "react-router-dom";
 
 export const routes = [
     { element: <AuthLayout />, children: authRoutes },
     {
         element: <DefaultLayout />,
         children: [
+            // Startup redirect: root path sends users to interview list
+            { path: "/", element: <Navigate to="/home" replace /> },
             { path: "/test", element: <App /> },
             { path: "/interview", element: <InterviewRoomListPage /> },
             { path: "/interview/room/:roomId", element: <InterviewRoomPage /> },
+            // You can alternatively expose a HomePage by replacing the redirect above:
+            // { path: "/", element: <HomePage /> },
         ],
     },
-    {element: <DefaultLayout />, children: intervieweeRoutes}
+    { element: <DefaultLayout />, children: intervieweeRoutes },
 ];

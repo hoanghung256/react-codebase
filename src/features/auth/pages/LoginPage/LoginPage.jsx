@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import DarkVeil from './DarkVeil';
 import SplitText from "./SplitText";
 import { TextField, Button, Typography } from '@mui/material';
+import { ROLES } from "../../../../common/constants/common";
 function LoginPage() {
     const isLoading = useLoading();
     const dispatch = useDispatch();
@@ -41,7 +42,13 @@ function LoginPage() {
             dispatch(setUserData(responseData.user));
             dispatch(setToken(responseData.token));
 
-            navigate("/");
+            if (responseData.user.role === ROLES.INTERVIEWER) {
+                navigate("/interviewer/dashboard");
+            } else if (responseData.user.role === ROLES.ADMIN) {
+                navigate("/admin/dashboard");
+            } else {
+                navigate("/home");
+            }
         }
         resetForm();
     };
