@@ -3,13 +3,7 @@ import { BE_BASE_URL } from "../../../../common/constants/env";
 import * as signalR from "@microsoft/signalr";
 import { useEffect, useRef, useState } from "react";
 import useUser from "../../../../common/hooks/useUser";
-import { UnControlled as CodeMirror } from "react-codemirror2";
-import "codemirror/lib/codemirror.css";
-import "codemirror/mode/javascript/javascript";
-import "codemirror/mode/python/python";
-import "codemirror/mode/clike/clike";
-import "codemirror/mode/lua/lua";
-import { Box, Select, MenuItem, Typography } from "@mui/material";
+import { Box} from "@mui/material";
 import QuestionPanel from "./QuestionPanel";
 import VideoPanel from "./VideoPanel";
 import CodeEditorPanel from "./CodeEditorPanel";
@@ -330,6 +324,13 @@ function InterviewRoomPage() {
             // The only job here is to update the state for the problem description/test case view.
             // Code generation is now handled by the backend and sent via "ReceiveCode".
             setReceivedProblem({ description, shortName, testCases });
+
+            // Also, synchronize the local editing state. This is crucial for when
+            // an interviewer reloads the page, so their editing fields are
+            // populated with the last sent problem data.
+            setProblemDescription(description);
+            setProblemShortName(shortName);
+            setTestCases(testCases);
         });
 
         conn.on("ReceiveTestResults", (results) => {

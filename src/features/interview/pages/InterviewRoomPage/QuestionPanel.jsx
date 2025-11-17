@@ -32,8 +32,6 @@ function QuestionPanel({
     removeTestCase,
     addExpectedOutput,
 }) {
-    console.log("data", problemData);
-    console.log("daproblemShortNameta", problemShortName);
     const quillModules = {
         toolbar: [
             [{ header: [1, 2, 3, false] }],
