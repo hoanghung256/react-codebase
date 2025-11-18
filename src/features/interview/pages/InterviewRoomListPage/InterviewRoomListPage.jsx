@@ -1,4 +1,15 @@
-import { Card, CardContent, Grid, Box, Typography, Avatar, Chip, Stack, Skeleton } from "@mui/material";
+import {
+    Card,
+    CardContent,
+    Grid,
+    Box,
+    Typography,
+    Avatar,
+    Chip,
+    Stack,
+    Skeleton,
+    Button,
+} from "@mui/material";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import CodeIcon from "@mui/icons-material/Code";
 import { interviewEndPoints } from "../../services/interviewRoomApi";
@@ -10,15 +21,24 @@ import { METHOD } from "../../../../common/constants/api.js";
 import { useEffect, useState } from "react";
 import { INTERVIEW_ROOM_STATUS } from "../../../../common/constants/status.js";
 import { ROLES } from "../../../../common/constants/common.js";
+import FeedbackListModal from "./FeedbackListModal.jsx"; // Import the FeedbackListModal
 
 function InterviewRoomListPage() {
     const user = useUser();
     const [upcomingRooms, setUpcomingRooms] = useState([]);
     const [pastRooms, setPastRooms] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [hasPendingFeedbacks, setHasPendingFeedbacks] = useState(false);
+    const [feedbackModalState, setFeedbackModalState] = useState({ open: false, mode: 'pending' }); // 'pending' or 'all'
 
     useEffect(() => {
-        if (user) fetchRooms();
+        if (user) {
+            fetchRooms();
+            // Check for pending feedbacks only if the user is an interviewee
+            if (user.role === ROLES.INTERVIEWEE) {
+                checkPendingFeedbacks();
+            }
+        }
     }, [user]);
 
     const fetchRooms = async () => {
@@ -42,13 +62,50 @@ function InterviewRoomListPage() {
         setLoading(false);
     };
 
+    const checkPendingFeedbacks = async () => {
+        try {
+            const res = await callApi({
+                method: METHOD.GET,
+                endpoint: interviewEndPoints.GET_FEEDBACKS,
+            });
+            if (res?.data) {
+                const pending = res.data.items.filter(fb => !fb.comments || fb.comments.trim() === '');
+                if (pending.length > 0) {
+                    setHasPendingFeedbacks(true);
+                    setFeedbackModalState({ open: true, mode: 'pending' }); // Open modal automatically if pending feedbacks exist
+                } else {
+                    setHasPendingFeedbacks(false);
+                }
+            }
+        } catch (error) {
+            console.error("Failed to check pending feedbacks:", error);
+        }
+    };
+
+    const handleOpenFeedbackModal = (mode) => setFeedbackModalState({ open: true, mode });
+    const handleCloseFeedbackModal = () => setFeedbackModalState({ open: false, mode: 'pending' });
+
     if (loading) return <RoomsSkeleton />;
 
     return (
         <Box sx={{ p: 2 }}>
-            <Typography variant="h5" sx={{ mb: 2 }}>
-                Upcoming Interviews
-            </Typography>
+            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+                <Typography variant="h5">Upcoming Interviews</Typography>
+                {user?.role === ROLES.INTERVIEWEE && ( // Only show buttons for interviewee
+                    <Stack direction="row" spacing={2}>
+                        {/*<Button*/}
+                        {/*    variant="contained"*/}
+                        {/*    onClick={() => handleOpenFeedbackModal('pending')}*/}
+                        {/*    disabled={!hasPendingFeedbacks}*/}
+                        {/*>*/}
+                        {/*    {hasPendingFeedbacks ? "View Pending Feedbacks" : "No Pending Feedbacks"}*/}
+                        {/*</Button>*/}
+                        <Button variant="outlined" onClick={() => handleOpenFeedbackModal('all')}>
+                            View All Feedbacks
+                        </Button>
+                    </Stack>
+                )}
+            </Stack>
 
             {upcomingRooms.length === 0 ? (
                 <Typography color="text.secondary">No upcoming interviews.</Typography>
@@ -73,6 +130,12 @@ function InterviewRoomListPage() {
                     ))}
                 </Grid>
             )}
+            <FeedbackListModal
+                open={feedbackModalState.open}
+                onClose={handleCloseFeedbackModal}
+                mode={feedbackModalState.mode}
+                onFeedbackSubmitted={checkPendingFeedbacks} // Re-check feedbacks after one is submitted
+            />
         </Box>
     );
 }
