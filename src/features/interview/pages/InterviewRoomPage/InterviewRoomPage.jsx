@@ -7,6 +7,7 @@ import { Box } from "@mui/material";
 import QuestionPanel from "./QuestionPanel";
 import VideoPanel from "./VideoPanel";
 import CodeEditorPanel from "./CodeEditorPanel";
+import { ROLES } from "../../../../common/constants/common.js";
 
 const ICE_SERVERS = [{ urls: "stun:stun.l.google.com:19302" }];
 
@@ -92,7 +93,7 @@ function InterviewRoomPage() {
     };
 
     const problemData =
-        user?.role === 1
+        user?.role === ROLES.INTERVIEWER
             ? { description: problemDescription, shortName: problemShortName, testCases }
             : receivedProblem;
 
@@ -615,7 +616,7 @@ function InterviewRoomPage() {
 
         // The candidate sends the changes to the server.
         // The interviewer's changes are local until they run code or change language.
-        if (user?.role !== 1 && connRef.current && event.changes.length > 0) {
+        if (user?.role !== ROLES.INTERVIEWER && connRef.current && event.changes.length > 0) {
             // No need to debounce when sending lightweight changes
             connRef.current.invoke("SendCode", roomId, event.changes, language);
         }

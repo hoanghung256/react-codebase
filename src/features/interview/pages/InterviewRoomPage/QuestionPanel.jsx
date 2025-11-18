@@ -6,6 +6,7 @@ import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
 import DOMPurify from "dompurify";
 import { Box, Typography, Paper, TextField, Tabs, Tab, Stack, Button, Tooltip, IconButton } from "@mui/material";
+import { ROLES } from "../../../../common/constants/common.js";
 
 function QuestionPanel({
     user,
@@ -45,7 +46,7 @@ function QuestionPanel({
 
     return (
         <Box>
-            {user?.role === 1 && (
+            {user?.role === ROLES.INTERVIEWER && (
                 <Stack direction="row" justifyContent="flex-end" sx={{ mb: 1 }}>
                     <Button
                         variant="outlined"
@@ -58,7 +59,7 @@ function QuestionPanel({
                 </Stack>
             )}
 
-            {isEditingProblem && user?.role === 1 ? (
+            {isEditingProblem && user?.role === ROLES.INTERVIEWER ? (
                 // EDITING VIEW (Role 1 only)
                 <Box sx={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
                     <Typography variant="h6" gutterBottom>
