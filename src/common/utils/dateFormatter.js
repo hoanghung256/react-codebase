@@ -16,7 +16,7 @@ export const formattedDateTime = (dateTimeString) => {
     });
 };
 
-export const getYearDiff = (startDate, endDate) => {
+export const getYearDiff = (start, end) => {
     const startDate = new Date(start);
     const endDate = new Date(end);
 

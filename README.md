@@ -1,14 +1,12 @@
-# React app templates
+# Clone project
+git clone https://github.com/your-username/intervu.git
+cd intervu-frontend
 
-- Formatter: Prettier
-- Linter: ESLint
-- Build tool: Vite
-- API: axios
-- Router: react-router-dom
-- State Management: Redux
-- UI lib: ...
+# Cài dependencies
+npm install
 
-## Moreover
+# Tạo file môi trường
+cp .env.example .env
 
-- react-hook-form
-- react-hot-toast
+# Chạy local
+npm run dev

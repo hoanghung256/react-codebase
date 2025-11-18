@@ -2,7 +2,8 @@ export const METHOD = {
     GET: "GET",
     POST: "POST",
     PUT: "PUT",
-    DELETE: "DELTE",
+    DELETE: "DELETE",
+    PATCH: "PATCH",
 };
 
 export const HTTP_RESPONSE_STATUS_CODE = {
