@@ -9,6 +9,7 @@ import { authRoutes } from "./authRoutes";
 import { interviewerRoutes } from "./interviewerRoutes";
 import { intervieweeRoutes } from "./intervieweeRoutes";
 import { Navigate } from "react-router-dom";
+import PublicInterviewerProfilePage from "../../features/profiles/interviewer/page/PublicInterviewerProfilePage/PublicInterviewerProfilePage";
 
 export const routes = [
     { element: <AuthLayout />, children: authRoutes },
@@ -33,4 +34,9 @@ export const routes = [
         children: adminRoutes,
     },
     { element: <DefaultLayout />, children: intervieweeRoutes },
+    // Public routes
+    {
+        element: <DefaultLayout />,
+        children: [{ path: "/interviewer/:id", element: <PublicInterviewerProfilePage /> }],
+    },
 ];
