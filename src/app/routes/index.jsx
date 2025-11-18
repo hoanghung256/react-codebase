@@ -1,6 +1,7 @@
 import App from "../../App";
 import InterviewRoomListPage from "../../features/interview/pages/InterviewRoomListPage/InterviewRoomListPage";
 import InterviewRoomPage from "../../features/interview/pages/InterviewRoomPage/InterviewRoomPage";
+import AdminDashboard from "../../features/admin/pages/AdminDashboard";
 import AuthLayout from "../layouts/AuthLayout";
 import DefaultLayout from "../layouts/DefaultLayout";
 import { authRoutes } from "./authRoutes";
@@ -11,6 +12,7 @@ export const routes = [
         element: <DefaultLayout />,
         children: [
             { path: "/", element: <App /> },
+            { path: "/admin", element: <AdminDashboard /> },
             { path: "/interview", element: <InterviewRoomListPage /> },
             { path: "/interview/room/:roomId", element: <InterviewRoomPage /> },
         ],
