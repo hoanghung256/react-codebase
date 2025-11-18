@@ -10,10 +10,30 @@ import EmptyLayout from "../layouts/EmptyLayout";
 import ProtectedRoute from "../../common/components/ProtectedRoute";
 import { ROLES } from "../../common/constants/common";
 import HomePage from "../../features/home/pages/HomePage";
+import UserProfilePage from "../../features/profile/pages/UserProfilePage";
 
 export const routes = [
     { path: "/", element: <Navigate to="/home" replace /> },
     { element: <EmptyLayout />, children: authRoutes },
+    // Profile route - accessible by all authenticated users
+    {
+        element: (
+            <ProtectedRoute allowedRoles={[ROLES.INTERVIEWEE, ROLES.INTERVIEWER, ROLES.ADMIN]}>
+                <MainLayout />
+            </ProtectedRoute>
+        ),
+        children: [
+            { path: "/profile", element: <UserProfilePage /> }
+        ],
+    },
+    {
+        element: (
+            <ProtectedRoute allowedRoles={[ROLES.INTERVIEWEE]}>
+                <MainLayout />
+            </ProtectedRoute>
+        ),
+        children: intervieweeRoutes,
+    },
     {
         element: (
             <ProtectedRoute allowedRoles={[ROLES.INTERVIEWER]}>
@@ -30,17 +50,11 @@ export const routes = [
         ),
         children: adminRoutes,
     },
-    {
-        element: (
-            <ProtectedRoute allowedRoles={[ROLES.INTERVIEWEE]}>
-                <MainLayout />
-            </ProtectedRoute>
-        ),
-        children: intervieweeRoutes,
-    },
     // Public routes
     {
         element: <DefaultLayout />,
-        children: [{ path: "/interviewer/:id", element: <PublicInterviewerProfilePage /> }],
+        children: [
+            { path: "/interviewer/:id", element: <PublicInterviewerProfilePage /> }
+        ],
     },
 ];
