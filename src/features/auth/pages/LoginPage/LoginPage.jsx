@@ -43,7 +43,7 @@ function LoginPage() {
             dispatch(setToken(responseData.token));
 
             if (responseData.user.role === ROLES.INTERVIEWER) {
-                navigate("/interviewer/dashboard");
+                navigate("/schedule");
             } else if (responseData.user.role === ROLES.ADMIN) {
                 navigate("/admin/dashboard");
             } else {

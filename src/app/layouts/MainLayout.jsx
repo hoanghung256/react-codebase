@@ -1,41 +1,45 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import './MainLayout.css';
+import { Container } from '@mui/material';
+import { ROLES } from '../../common/constants/common';
 
 const MainLayout = () => {
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { userData, token } = useSelector((state) => state.auth || {});
+  const { userData } = useSelector((state) => state.auth || {});
 
   const handleLogout = () => {
     localStorage.removeItem('token');
     navigate('/login');
   };
 
-  const menuItems = {
-    interviewee: [
-      { label: 'Explore', path: '/' },
-      { label: 'My Bookings', path: '/bookings' },
-      { label: 'Messages', path: '/messages' },
-      { label: 'Profile', path: '/profile' },
+  const menuItems = [
+    // INTERVIEWEE
+    [
+      { label: 'Home', path: '/home' },
+      { label: 'Interview', path: '/interview' },
+      { label: 'Messages', path: '#' },
+      { label: 'Profile', path: '#' },
     ],
-    interviewer: [
+    // INTERVIEWER
+    [
       { label: 'Dashboard', path: '/dashboard' },
-      { label: 'Availability', path: '/availability' },
-      { label: 'Bookings', path: '/bookings' },
-      { label: 'Messages', path: '/messages' },
+      { label: 'Schedule', path: '/schedule' },
+      { label: 'Interview', path: '/interview' },
+      { label: 'Messages', path: '#' },
     ],
-    admin: [
-      { label: 'Dashboard', path: '/admin' },
-      { label: 'Users', path: '/admin/users' },
-      { label: 'Reports', path: '/admin/reports' },
+    // ADMIN
+    [
+      { label: 'Dashboard', path: '#' },
+      { label: 'Users', path: '#' },
+      { label: 'Reports', path: '#' },
     ],
-  };
+  ];
 
-  const userRole = String(userData?.role || 'interviewee').toLowerCase();
-  const currentMenuItems = menuItems[userRole] || menuItems.interviewee;
+  const currentMenuItems = menuItems[userData?.role] || menuItems[ROLES.INTERVIEWEE];
 
   const isMenuItemActive = (path) => location.pathname === path;
 
@@ -87,7 +91,7 @@ const MainLayout = () => {
             </div>
 
             {/* Upgrade Button */}
-            {userRole === 'interviewee' && (
+            {userData?.role === ROLES.INTERVIEWEE && (
               <button className="upgrade-btn">Upgrade Pro</button>
             )}
 
@@ -173,7 +177,9 @@ const MainLayout = () => {
 
       {/* Main Content */}
       <main className="main-content">
-        <Outlet />
+        <Container>
+          <Outlet />
+        </Container>
       </main>
 
       {/* Footer */}

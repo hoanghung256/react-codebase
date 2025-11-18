@@ -288,12 +288,11 @@ const ScheduleManagement = () => {
     return (
         <Box
             sx={{
-                backgroundColor: "#F9FAFB",
                 minHeight: "100vh",
                 py: 4,
             }}
         >
-            <Box sx={{ maxWidth: "1400px", mx: "auto", px: { xs: 2, md: 4 } }}>
+            <Box sx={{ maxWidth: "1400px", mx: "auto" }}>
                 {/* Header */}
                 <Stack
                     direction={{ xs: "column", sm: "row" }}

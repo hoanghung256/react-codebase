@@ -1,9 +1,3 @@
-import App from "../../App";
-import InterviewRoomListPage from "../../features/interview/pages/InterviewRoomListPage/InterviewRoomListPage";
-import InterviewRoomPage from "../../features/interview/pages/InterviewRoomPage/InterviewRoomPage";
-import HomePage from "../../features/home/pages/HomePage";
-import ScheduleManagement from "../../features/interviewer/pages/ScheduleManagement";
-import AuthLayout from "../layouts/AuthLayout";
 import MainLayout from "../layouts/MainLayout";
 import DefaultLayout from "../layouts/DefaultLayout";
 import { adminRoutes } from "./adminRoutes";
@@ -12,30 +6,36 @@ import { interviewerRoutes } from "./interviewerRoutes";
 import { intervieweeRoutes } from "./intervieweeRoutes";
 import { Navigate } from "react-router-dom";
 import PublicInterviewerProfilePage from "../../features/profiles/interviewer/page/PublicInterviewerProfilePage/PublicInterviewerProfilePage";
+import EmptyLayout from "../layouts/EmptyLayout";
+import ProtectedRoute from "../../common/components/ProtectedRoute";
+import { ROLES } from "../../common/constants/common";
+import HomePage from "../../features/home/pages/HomePage";
 
 export const routes = [
-    { element: <AuthLayout />, children: authRoutes },
+    { path: "/", element: <Navigate to="/home" replace /> },
+    { element: <EmptyLayout />, children: authRoutes },
     {
-        element: <MainLayout />,
-        children: [
-            // Startup redirect: root path sends users to interview list
-            { path: "/", element: <Navigate to="/home" replace /> },
-            { path: "/test", element: <App /> },
-            { path: "/interview", element: <InterviewRoomListPage /> },
-            { path: "/interview/room/:roomId", element: <InterviewRoomPage /> },
-            { path: "/schedule", element: <ScheduleManagement /> },
-        ],
-    },
-    {
-        element: <DefaultLayout />,
+        element: (
+            <ProtectedRoute allowedRoles={[ROLES.INTERVIEWER]}>
+                <MainLayout />
+            </ProtectedRoute>
+        ),
         children: interviewerRoutes,
     },
     {
-        element: <DefaultLayout />,
+        element: (
+            <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+                <MainLayout />
+            </ProtectedRoute>
+        ),
         children: adminRoutes,
     },
     {
-        element: <DefaultLayout />,
+        element: (
+            <ProtectedRoute allowedRoles={[ROLES.INTERVIEWEE]}>
+                <MainLayout />
+            </ProtectedRoute>
+        ),
         children: intervieweeRoutes,
     },
     // Public routes
