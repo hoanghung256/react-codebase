@@ -1,24 +1,7 @@
-import { blue, orange, red } from "@mui/material/colors";
-
-export const interviewRoomStatuses = [
-    {
-        name: "Scheduled",
-        color: blue[300],
-    },
-    {
-        name: "Ongoing",
-        color: "green",
-    },
-    {
-        name: "Completed",
-        color: "gray",
-    },
-    {
-        name: "Cancelled",
-        color: red[300],
-    },
-    {
-        name: "NoShow",
-        color: orange[300],
-    },
-];
+export const INTERVIEW_ROOM_STATUS = {
+    SCHEDULED: 0,
+    ON_GOING: 1,
+    COMPLETED: 2,
+    CANCELLED: 3,
+    NO_SHOW: 4,
+};
