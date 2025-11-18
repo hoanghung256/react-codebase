@@ -20,6 +20,7 @@ import {
     Paper,
     Skeleton,
 } from "@mui/material";
+import BookingSlotDialog from "./BookingSlotDialog";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import LaunchIcon from "@mui/icons-material/Launch";
 import StarIcon from "@mui/icons-material/Star";
@@ -31,6 +32,8 @@ function PublicInterviewerProfilePage() {
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
+    const [selectedSlot, setSelectedSlot] = useState(null);
     const { id } = useParams();
 
     useEffect(() => {
@@ -52,6 +55,13 @@ function PublicInterviewerProfilePage() {
             setLoading(true);
             setTimeout(() => setLoading(false), 200);
         }
+    };
+
+    const handleSlotSelected = (slot) => {
+        setSelectedSlot(slot);
+        // TODO: Sau khi chọn slot, điều hướng tới checkout page
+        console.log("Selected slot for booking:", slot);
+        // Ví dụ: navigate("/checkout", { state: { slot, interviewerId: id } });
     };
 
     const avatarLetter = useMemo(() => profile?.user?.fullName?.trim()?.charAt(0)?.toUpperCase() || "?", [profile]);
@@ -194,7 +204,7 @@ function PublicInterviewerProfilePage() {
                                         fullWidth
                                         variant="contained"
                                         color="primary"
-                                        onClick={() => alert("Implementing")}
+                                        onClick={() => setBookingDialogOpen(true)}
                                     >
                                         Book Now
                                     </Button>
@@ -219,6 +229,14 @@ function PublicInterviewerProfilePage() {
                     </Typography>
                 </Box>
             )}
+
+            {/* Booking Dialog */}
+            <BookingSlotDialog
+                open={bookingDialogOpen}
+                onClose={() => setBookingDialogOpen(false)}
+                interviewerId={id}
+                onSlotSelected={handleSlotSelected}
+            />
         </Container>
     );
 }
