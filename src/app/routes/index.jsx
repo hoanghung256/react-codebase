@@ -26,11 +26,6 @@ export const routes = [
             { path: "/schedule", element: <ScheduleManagement /> },
         ],
     },
-    {element: <MainLayout />, children: intervieweeRoutes}
-            // You can alternatively expose a HomePage by replacing the redirect above:
-            // { path: "/", element: <HomePage /> },
-        ],
-    },
     {
         element: <DefaultLayout />,
         children: interviewerRoutes,
@@ -39,7 +34,10 @@ export const routes = [
         element: <DefaultLayout />,
         children: adminRoutes,
     },
-    { element: <DefaultLayout />, children: intervieweeRoutes },
+    {
+        element: <DefaultLayout />,
+        children: intervieweeRoutes,
+    },
     // Public routes
     {
         element: <DefaultLayout />,
