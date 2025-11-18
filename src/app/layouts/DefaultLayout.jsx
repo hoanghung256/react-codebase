@@ -42,7 +42,9 @@ const DefaultLayout = () => {
 
             {/* Main */}
             <Box component="main" sx={{ flex: 1 }}>
-                <Outlet />
+                <Container>
+                    <Outlet />
+                </Container>
             </Box>
 
             {/* Footer */}
