@@ -36,7 +36,7 @@ function CreateInterviewerProfileDialog({ open, onClose }) {
         e.preventDefault();
 
         try {
-            const { success, data, message } = await callApi({
+            let { success, data, message } = await callApi({
                 method: METHOD.POST,
                 endpoint,
                 arg: form,
