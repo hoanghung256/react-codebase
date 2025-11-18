@@ -23,3 +23,6 @@ dist-ssr
 
 # Environment files
 .env
+
+# Secret files
+intervu-be-https-devcert.pfx

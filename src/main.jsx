@@ -7,15 +7,19 @@ import { configureStore } from "@reduxjs/toolkit";
 import { rootReducer } from "./common/store/index.js";
 import { ThemeProvider } from "@mui/material/styles";
 import { theme } from "./common/constants/theme.jsx";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 
 const router = createBrowserRouter(routes);
-const store = configureStore({ reducer: rootReducer });
+export const store = configureStore({ reducer: rootReducer });
 
 createRoot(document.getElementById("root")).render(
     <ThemeProvider theme={theme}>
         <Provider store={store}>
             <RouterProvider router={router} />
             <Toaster position="top-right" />
+            <Analytics/>
+            <SpeedInsights/>
         </Provider>
     </ThemeProvider>,
 );
