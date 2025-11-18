@@ -12,16 +12,11 @@ export const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use(
     (config) => {
         const token = JSON.parse(localStorage.getItem("token"));
-
-        console.log(token);
-
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
-
         return config;
     },
-
     (error) => Promise.reject(error),
 );
 
@@ -53,6 +48,9 @@ export const callApi = async ({ method, endpoint, arg, displaySuccessMessage = f
             localStorage.removeItem("token");
             localStorage.removeItem("user");
             window.location.href = "/login";
+        } else if (error.status == HTTP_RESPONSE_STATUS_CODE.FORBIDDENT) {
+            alert("You do not have permission to perform this action.");
+            window.location.href = "/";
         } else if (alertErrorMessage) {
             alert(error.message || "An error occurred");
         } else {
