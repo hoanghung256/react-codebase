@@ -4,7 +4,9 @@ import InterviewRoomPage from "../../features/interview/pages/InterviewRoomPage/
 import HomePage from "../../features/home/pages/HomePage";
 import AuthLayout from "../layouts/AuthLayout";
 import DefaultLayout from "../layouts/DefaultLayout";
+import { adminRoutes } from "./adminRoutes";
 import { authRoutes } from "./authRoutes";
+import { interviewerRoutes } from "./interviewerRoutes";
 import { intervieweeRoutes } from "./intervieweeRoutes";
 import { Navigate } from "react-router-dom";
 
@@ -21,6 +23,14 @@ export const routes = [
             // You can alternatively expose a HomePage by replacing the redirect above:
             // { path: "/", element: <HomePage /> },
         ],
+    },
+    {
+        element: <DefaultLayout />,
+        children: interviewerRoutes,
+    },
+    {
+        element: <DefaultLayout />,
+        children: adminRoutes,
     },
     { element: <DefaultLayout />, children: intervieweeRoutes },
 ];
