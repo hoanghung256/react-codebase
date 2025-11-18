@@ -9,7 +9,8 @@ import PublicInterviewerProfilePage from "../../features/profiles/interviewer/pa
 import EmptyLayout from "../layouts/EmptyLayout";
 import ProtectedRoute from "../../common/components/ProtectedRoute";
 import { ROLES } from "../../common/constants/common";
-import HomePage from "../../features/home/pages/HomePage";
+import InterviewRoomListPage from "../../features/interview/pages/InterviewRoomListPage/InterviewRoomListPage";
+import InterviewRoomPage from "../../features/interview/pages/InterviewRoomPage/InterviewRoomPage";
 
 export const routes = [
     { path: "/", element: <Navigate to="/home" replace /> },
@@ -38,6 +39,21 @@ export const routes = [
         ),
         children: intervieweeRoutes,
     },
+    {
+        element: (
+            <ProtectedRoute allowedRoles={[ROLES.INTERVIEWEE, ROLES.INTERVIEWER]}>
+                <MainLayout />
+            </ProtectedRoute>
+        ),
+        children: [
+            { path: "/interview", element: <InterviewRoomListPage /> },
+            {
+                element: <EmptyLayout />,
+                children: [{ path: "/interview/room/:roomId", element: <InterviewRoomPage /> }],
+            },
+        ],
+    },
+
     // Public routes
     {
         element: <DefaultLayout />,
