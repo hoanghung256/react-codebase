@@ -1,11 +1,11 @@
 .home-page {
   min-height: 100vh;
-  background: #f9f9f9;
+  /* background: #f9f9f9; */
 }
 
 /* Hero Section - Exponent Style */
 .hero-section {
-  padding: 60px 40px;
+  /* padding: 60px 40px; */
   max-width: 1400px;
   margin: 0 auto;
 }
@@ -155,7 +155,7 @@
 
 /* Browse Section */
 .browse-section {
-  padding: 0px 40px;
+  /* padding: 0px 40px; */
   max-width: 1400px;
   margin: 0 auto;
 }
