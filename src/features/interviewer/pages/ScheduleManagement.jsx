@@ -41,6 +41,8 @@ const ScheduleManagement = () => {
     const [currentDate, setCurrentDate] = useState(new Date());
     const [openModal, setOpenModal] = useState(false);
     const [editingId, setEditingId] = useState(null);
+    const [openDeleteModal, setOpenDeleteModal] = useState(false);
+    const [deletingId, setDeletingId] = useState(null);
     const [formData, setFormData] = useState({
         date: "",
         startHour: "09",
@@ -137,11 +139,9 @@ const ScheduleManagement = () => {
         setOpenModal(true);
     };
 
-    const handleDeleteClick = async (id) => {
-        if (window.confirm("Are you sure you want to delete this availability slot?")) {
-            await dispatch(removeAvailability(id));
-            toast.success("Availability slot deleted");
-        }
+    const handleDeleteClick = (id) => {
+        setDeletingId(id);
+        setOpenDeleteModal(true);
     };
 
     const checkOverlap = (newStart, newEnd, excludeId = null) => {
@@ -247,6 +247,15 @@ const ScheduleManagement = () => {
         } catch (err) {
             console.error("Error in handleSubmit catch block:", err);
             toast.error("An error occurred");
+        }
+    };
+
+    const handleConfirmDelete = async () => {
+        if (deletingId) {
+            await dispatch(removeAvailability(deletingId));
+            toast.success("Availability slot deleted");
+            setOpenDeleteModal(false);
+            setDeletingId(null);
         }
     };
 
@@ -554,6 +563,7 @@ const ScheduleManagement = () => {
                                                         sx={{
                                                             textTransform: "none",
                                                             fontSize: "0.75rem",
+                                                            fontWeight: 600,
                                                             color: "primary.main",
                                                         }}
                                                     >
@@ -568,6 +578,7 @@ const ScheduleManagement = () => {
                                                         sx={{
                                                             textTransform: "none",
                                                             fontSize: "0.75rem",
+                                                            fontWeight: 600,
                                                         }}
                                                     >
                                                         Delete
@@ -725,6 +736,7 @@ const ScheduleManagement = () => {
                                         textTransform: "none",
                                         borderColor: "divider",
                                         color: "text.secondary",
+                                        fontWeight: 600,
                                     }}
                                 >
                                     Cancel
@@ -736,11 +748,118 @@ const ScheduleManagement = () => {
                                     disabled={loading}
                                     sx={{
                                         textTransform: "none",
+                                        fontWeight: 600,
+                                        py: 1.25,
+                                        px: 3,
                                     }}
                                 >
                                     {editingId ? "Update" : "Create"}
                                 </Button>
                             </Stack>
+                        </Stack>
+                    </Box>
+                </Card>
+            </Modal>
+
+            {/* Modal Delete Confirmation */}
+            <Modal
+                open={openDeleteModal}
+                onClose={() => {
+                    setOpenDeleteModal(false);
+                    setDeletingId(null);
+                }}
+                sx={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                }}
+            >
+                <Card
+                    sx={{
+                        width: "90%",
+                        maxWidth: "500px",
+                        borderRadius: "12px",
+                    }}
+                >
+                    <Box sx={{ p: 3 }}>
+                        <Typography
+                            variant="h5"
+                            sx={{
+                                fontWeight: 700,
+                                mb: 3,
+                                color: "text.primary",
+                            }}
+                        >
+                            Delete Availability Slot
+                        </Typography>
+
+                        {deletingId && (
+                            <Box sx={{ mb: 3 }}>
+                                <Typography
+                                    variant="body1"
+                                    sx={{
+                                        color: "text.secondary",
+                                        mb: 2,
+                                    }}
+                                >
+                                    Are you sure you want to delete this availability slot?
+                                </Typography>
+                                {(() => {
+                                    const avail = availabilities.find(a => a.id === deletingId);
+                                    if (avail) {
+                                        return (
+                                            <Box sx={{ p: 2, bgcolor: "grey.50", borderRadius: "8px" }}>
+                                                <Typography variant="body2" sx={{ fontWeight: 600, color: "text.primary" }}>
+                                                    Date: {parseUTCDate(avail.startTime)}
+                                                </Typography>
+                                                <Typography variant="body2" sx={{ color: "primary.main", fontWeight: 600 }}>
+                                                    Time: {parseUTCTime(avail.startTime)} - {parseUTCTime(avail.endTime)}
+                                                </Typography>
+                                                <Typography variant="body2" sx={{ color: avail.isBooked ? "error.main" : "success.main" }}>
+                                                    Status: {avail.isBooked ? "Booked" : "Available"}
+                                                </Typography>
+                                            </Box>
+                                        );
+                                    }
+                                    return null;
+                                })()}
+                            </Box>
+                        )}
+
+                        <Stack
+                            direction="row"
+                            spacing={2}
+                            justifyContent="flex-end"
+                        >
+                            <Button
+                                variant="outlined"
+                                onClick={() => {
+                                    setOpenDeleteModal(false);
+                                    setDeletingId(null);
+                                }}
+                                sx={{
+                                    textTransform: "none",
+                                    borderColor: "divider",
+                                    color: "text.secondary",
+                                    fontWeight: 600,
+                                }}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                variant="contained"
+                                color="error"
+                                onClick={handleConfirmDelete}
+                                disabled={loading}
+                                sx={{
+                                    textTransform: "none",
+                                    fontWeight: 600,
+                                    py: 1.25,
+                                    px: 3,
+                                }}
+                            >
+                                Delete
+                            </Button>
                         </Stack>
                     </Box>
                 </Card>

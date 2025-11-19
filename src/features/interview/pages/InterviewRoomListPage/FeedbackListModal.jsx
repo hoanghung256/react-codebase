@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import {
     Alert,
-    Modal,
-    Box,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
     Typography,
     List,
     ListItem,
@@ -12,6 +14,7 @@ import {
     TextField,
     Button,
     Stack,
+    Box,
 } from "@mui/material";
 import RateReviewOutlinedIcon from "@mui/icons-material/RateReviewOutlined";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
@@ -124,35 +127,28 @@ function FeedbackListModal({ open, onClose, onFeedbackSubmitted, mode = 'pending
     const hasPendingFeedbacks = mode === 'pending' && feedbacks.length > 0;
 
 
-    const style = {
-        position: 'absolute',
-        top: '50%',
-        left: '50%',
-        transform: 'translate(-50%, -50%)',
-        width: 400,
-        bgcolor: 'background.paper',
-        border: '2px solid #000',
-        boxShadow: 24,
-        p: 4,
-    };
-
     return (
-        <Modal
+        <Dialog
             open={open}
             onClose={handleClose}
             aria-labelledby="feedback-list-modal"
             aria-describedby="feedback-submission-form"
+            maxWidth="sm"
+            fullWidth
         >
-            <Box sx={style}>
-                <Typography id="feedback-list-modal" variant="h6" component="h2">
+            <DialogTitle id="feedback-list-modal">
+                <Typography variant="h6" fontWeight={600}>
                     {mode === 'pending' ? 'Pending Feedbacks' : 'All Feedbacks'}
                 </Typography>
+            </DialogTitle>
+
+            <DialogContent dividers>
                 {loading ? (
                     <Typography>Loading feedbacks...</Typography>
                 ) : (
                     <>
                         {feedbacks.length === 0 ? (
-                            <Typography color="text.secondary" sx={{ mt: 2 }}>{mode === 'pending' ? 'No pending feedbacks.' : 'No feedbacks found.'}</Typography>
+                            <Typography color="text.secondary" sx={{ mt: 1 }}>{mode === 'pending' ? 'No pending feedbacks.' : 'No feedbacks found.'}</Typography>
                         ) : (
                             <List>
                                 {feedbacks.map((feedback) => (
@@ -196,7 +192,7 @@ function FeedbackListModal({ open, onClose, onFeedbackSubmitted, mode = 'pending
                 {selectedFeedback && (
                     <Box component="form" mt={2} noValidate autoComplete="off">
                         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-                        <Typography variant="h6">
+                        <Typography variant="subtitle1" sx={{ mt: 1 }}>
                             {selectedFeedback.comments ? `View Feedback for Room: ${selectedFeedback.interviewRoomId}` : `Submit Feedback for Room: ${selectedFeedback.interviewRoomId}`}
                         </Typography>
                         <Stack spacing={2} sx={{ mt: 2 }}>
@@ -207,26 +203,31 @@ function FeedbackListModal({ open, onClose, onFeedbackSubmitted, mode = 'pending
                                 rows={4}
                                 fullWidth
                                 value={comments}
-                                onChange={handleCommentsChange} // This is fine, as the whole field is disabled
+                                onChange={handleCommentsChange}
                                 margin="normal"
                                 disabled={!!selectedFeedback.comments}
                                 InputProps={{
                                     readOnly: !!selectedFeedback.comments,
                                 }}
                             />
-                            {!selectedFeedback.comments && <Button variant="contained" color="primary" onClick={handleSubmit}>
-                                Submit Feedback
-                            </Button>}
                         </Stack>
                     </Box>
                 )}
-                {!hasPendingFeedbacks && (
-                    <Button onClick={onClose} sx={{ mt: 2 }}>
-                        Close
+            </DialogContent>
+
+            <DialogActions>
+                {/* If selectedFeedback is editable, show submit action in actions for consistency */}
+                {selectedFeedback && !selectedFeedback.comments && (
+                    <Button onClick={handleSubmit} variant="contained" color="primary" sx={{ boxShadow: 'none' }}>
+                        Submit Feedback
                     </Button>
                 )}
-            </Box>
-        </Modal>
+
+                <Button onClick={onClose} variant="outlined">
+                    Close
+                </Button>
+            </DialogActions>
+        </Dialog>
     );
 }
 

@@ -8,21 +8,128 @@ import { setToken, setUserData } from "../../../../common/store/authSlice";
 import { useNavigate } from "react-router-dom";
 import DarkVeil from './DarkVeil';
 import SplitText from "./SplitText";
-import { TextField, Button, Typography } from '@mui/material';
+import { TextField, Button, Typography, Divider, Box } from '@mui/material';
 import { ROLES } from "../../../../common/constants/common";
+import { GOOGLE_CLIENT_ID } from "../../../../common/constants/env";
+import { useEffect, useRef } from "react";
 function LoginPage() {
     const isLoading = useLoading();
     const dispatch = useDispatch();
+    const navigate = useNavigate();
+    const handleGoogleSignInRef = useRef(null);
+    
     const {
         register,
         handleSubmit,
         reset: resetForm,
         formState: { errors },
     } = useForm();
-    const navigate = useNavigate();
+    
     const handleAnimationComplete = () => {
         // optional callback when split text animation completes
     };
+
+    // Google Sign-In handler
+    const handleGoogleSignIn = async (response) => {
+        try {
+            console.log("Raw Google callback response:", response);
+            const credential = response?.credential;
+            if (!credential) {
+                console.error("No credential returned from Google Identity Services");
+                alert("Google did not return a credential. Check client ID and allowed origins.");
+                return;
+            }
+
+            // Send multiple field names to satisfy backend expectation (IdToken or credential or id_token)
+            const result = await callApi({
+                method: METHOD.POST,
+                endpoint: authEndPoints.GOOGLE_LOGIN_API,
+                arg: {
+                    IdToken: credential,
+                    credential: credential,
+                    id_token: credential,
+                },
+                displaySuccessMessage: false,
+                alertErrorMessage: false,
+            });
+
+            console.log("Google Sign-In API result:", result);
+
+            if (result && result.success) {
+                const responseData = result.data;
+                localStorage.setItem("user", JSON.stringify(responseData.user));
+                localStorage.setItem("token", JSON.stringify(responseData.token));
+                dispatch(setUserData(responseData.user));
+                dispatch(setToken(responseData.token));
+
+                if (responseData.user.role === ROLES.INTERVIEWER) {
+                    navigate("/schedule");
+                } else if (responseData.user.role === ROLES.ADMIN) {
+                    navigate("/admin/dashboard");
+                } else {
+                    navigate("/home");
+                }
+            } else {
+                console.error("Google Sign-In failed:", result?.message || "Unknown error");
+                alert(result?.message || "Google Sign-In failed. Please try again.");
+            }
+        } catch (error) {
+            console.error("Google Sign-In Error:", error);
+            console.error("Error Response Data:", error.response?.data);
+            console.error("Error Status:", error.response?.status);
+            const errorMessage = error.response?.data?.message || 
+                error.response?.data?.error ||
+                error.message ||
+                "An error occurred during Google Sign-In. Please try again.";
+            alert(errorMessage);
+        }
+    };
+
+    // Google Sign-In initialization
+    useEffect(() => {
+        // Store the handler in ref so it persists across renders
+        handleGoogleSignInRef.current = handleGoogleSignIn;
+
+        // Load Google Identity Services script
+        const script = document.createElement('script');
+        script.src = 'https://accounts.google.com/gsi/client';
+        script.async = true;
+        script.defer = true;
+        document.head.appendChild(script);
+
+        script.onload = () => {
+            if (window.google && GOOGLE_CLIENT_ID) {
+                // Make the callback function globally accessible
+                window.handleGoogleSignInCallback = handleGoogleSignInRef.current;
+                
+                window.google.accounts.id.initialize({
+                    client_id: GOOGLE_CLIENT_ID,
+                    callback: (response) => {
+                        if (handleGoogleSignInRef.current) {
+                            handleGoogleSignInRef.current(response);
+                        }
+                    },
+                });
+
+                // Render the Sign-In button after initialization
+                window.google.accounts.id.renderButton(
+                    document.getElementById('g_id_signin_button'),
+                    {
+                        theme: 'filled_black',
+                        size: 'large',
+                        text: 'signin_with',
+                        logo_alignment: 'left',
+                    }
+                );
+            }
+        };
+
+        return () => {
+            if (document.head.contains(script)) {
+                document.head.removeChild(script);
+            }
+        };
+    }, [dispatch, navigate]);
 
     const onSubmit = async (data) => {
         const { success, data: responseData, message } = await callApi({
@@ -149,6 +256,19 @@ function LoginPage() {
                                     </Button>
                                 )}
                             </div>
+                            
+                            {/* Google Sign-In Divider */}
+                            <Box sx={{ my: 3 }}>
+                                <Divider sx={{ 
+                                    '&::before, &::after': { backgroundColor: 'rgba(255,255,255,0.2)' },
+                                    '& .MuiDivider-wrapper': { color: 'rgba(255,255,255,0.6)', fontSize: '12px' }
+                                }}>
+                                    or
+                                </Divider>
+                            </Box>
+
+                            {/* Google Sign-In Button */}
+                            <div id="g_id_signin_button" style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}></div>
                             
                             <div style={{ textAlign: 'center', marginTop: '16px' }}>
                                 <Typography style={{ fontSize: '14px', color: 'rgba(255,255,255,0.6)' }}>

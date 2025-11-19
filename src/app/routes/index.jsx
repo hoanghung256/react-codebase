@@ -24,7 +24,10 @@ export const routes = [
                 <MainLayout />
             </ProtectedRoute>
         ),
-        children: [{ path: "/user/profile", element: <UserProfilePage /> }],
+        children: [
+            { path: "/user/profile", element: <UserProfilePage /> },
+            { path: "/profile", element: <UserProfilePage /> }, // Add this for both interviewer and interviewee
+        ],
     },
     {
         element: (
