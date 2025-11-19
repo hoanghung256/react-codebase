@@ -1,3 +1,4 @@
+import InterviewRoomListPage from "../../features/interview/pages/InterviewRoomListPage/InterviewRoomListPage";
 import ScheduleManagement from "../../features/interviewer/pages/ScheduleManagement";
 import InterviewerProfilePage from "../../features/profiles/interviewer/page/InterviewerProfilePage";
 
