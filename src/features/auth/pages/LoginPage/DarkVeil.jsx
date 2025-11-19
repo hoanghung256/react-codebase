@@ -81,7 +81,8 @@ export default function DarkVeil({
   speed = 0.5,
   scanlineFrequency = 0,
   warpAmount = 0,
-  resolutionScale = 1
+  resolutionScale = 1,
+  lightMode = false // NEW: switch between dark and light theme
 }) {
   const ref = useRef(null);
   useEffect(() => {
@@ -90,7 +91,8 @@ export default function DarkVeil({
 
     const renderer = new Renderer({
       dpr: Math.min(window.devicePixelRatio, 2),
-      canvas
+      canvas,
+      alpha: true // Enable transparency for light mode
     });
 
     const gl = renderer.gl;
@@ -102,7 +104,7 @@ export default function DarkVeil({
       uniforms: {
         uTime: { value: 0 },
         uResolution: { value: new Vec2() },
-        uHueShift: { value: hueShift },
+        uHueShift: { value: lightMode ? hueShift + 180 : hueShift }, // Shift hue for pastel colors in light mode
         uNoise: { value: noiseIntensity },
         uScan: { value: scanlineIntensity },
         uScanFreq: { value: scanlineFrequency },
@@ -127,7 +129,7 @@ export default function DarkVeil({
 
     const loop = () => {
       program.uniforms.uTime.value = ((performance.now() - start) / 1000) * speed;
-      program.uniforms.uHueShift.value = hueShift;
+      program.uniforms.uHueShift.value = lightMode ? hueShift + 180 : hueShift;
       program.uniforms.uNoise.value = noiseIntensity;
       program.uniforms.uScan.value = scanlineIntensity;
       program.uniforms.uScanFreq.value = scanlineFrequency;
@@ -142,6 +144,7 @@ export default function DarkVeil({
       cancelAnimationFrame(frame);
       window.removeEventListener('resize', resize);
     };
-  }, [hueShift, noiseIntensity, scanlineIntensity, speed, scanlineFrequency, warpAmount, resolutionScale]);
-  return <canvas ref={ref} className="darkveil-canvas" />;
+  }, [hueShift, noiseIntensity, scanlineIntensity, speed, scanlineFrequency, warpAmount, resolutionScale, lightMode]);
+  
+  return <canvas ref={ref} className="darkveil-canvas" style={lightMode ? { opacity: 0.3, mixBlendMode: 'multiply' } : {}} />;
 }
