@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { callApi } from "../../../../../common/utils/apiConnector";
 import { METHOD } from "../../../../../common/constants/api";
 import { interviewerProfileEndPoints } from "../../service/interviewerProfileApi";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import {
     Avatar,
     Box,
@@ -27,6 +27,8 @@ import StarIcon from "@mui/icons-material/Star";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 import BusinessIcon from "@mui/icons-material/Business";
 import CodeIcon from "@mui/icons-material/Code";
+import toast from "react-hot-toast";
+import { PAYOS_TRANSACTION_STATUS, TRANSACTION_STATUS } from "../../../../../common/constants/status";
 
 function PublicInterviewerProfilePage() {
     const [profile, setProfile] = useState(null);
@@ -36,9 +38,25 @@ function PublicInterviewerProfilePage() {
     const [selectedSlot, setSelectedSlot] = useState(null);
     const { id } = useParams();
 
+    // Handle payos callback params
+    const [searchParams] = useSearchParams();
+    const orderCode = searchParams.get("orderCode");
+    const paymentStatus = searchParams.get("status");
+
     useEffect(() => {
         if (id) fetchProfile();
-    }, [id]);
+        if (orderCode && paymentStatus === PAYOS_TRANSACTION_STATUS.PAID) checkTransactionStatus();
+    }, [id, orderCode, paymentStatus]);
+
+    const checkTransactionStatus = async () => {
+        const { data } = await callApi({
+            method: METHOD.GET,
+            endpoint: interviewerProfileEndPoints.GET_BOOKING_TRANSACTION.replace("{orderCode}", orderCode),
+        });
+        if (data && data.status === TRANSACTION_STATUS.PAID) {
+            toast.success("Interview booked successfully!");
+        }
+    };
 
     const fetchProfile = async () => {
         try {
@@ -57,11 +75,25 @@ function PublicInterviewerProfilePage() {
         }
     };
 
-    const handleSlotSelected = (slot) => {
+    const handleSlotSelected = async (slot) => {
         setSelectedSlot(slot);
-        // TODO: Sau khi chọn slot, điều hướng tới checkout page
-        console.log("Selected slot for booking:", slot);
-        // Ví dụ: navigate("/checkout", { state: { slot, interviewerId: id } });
+
+        console.log("Selected slot:", slot);
+        const returnUrl = window.location.origin + window.location.pathname;
+        const { data } = await callApi({
+            method: METHOD.POST,
+            endpoint: interviewerProfileEndPoints.BOOK_INTERVIEW,
+            arg: {
+                interviewerId: slot.interviewerId,
+                interviewerAvailabilityId: slot.id,
+                returnUrl: returnUrl,
+            },
+        });
+
+        if (data && data.checkOutUrl) {
+            window.location.href = data.checkOutUrl;
+        }
+        console.log("checkOutUrl:", data.checkOutUrl);
     };
 
     const avatarLetter = useMemo(() => profile?.user?.fullName?.trim()?.charAt(0)?.toUpperCase() || "?", [profile]);

@@ -20,19 +20,11 @@ import {
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import {
-    format,
-    startOfMonth,
-    endOfMonth,
-    eachDayOfInterval,
-    isSameDay,
-    addMonths,
-    subMonths,
-    getDay,
-} from "date-fns";
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths, getDay } from "date-fns";
 import { enUS } from "date-fns/locale";
 import { callApi } from "../../../../../common/utils/apiConnector";
 import { METHOD } from "../../../../../common/constants/api";
+import useLoading from "../../../../../common/hooks/useLoading";
 
 const BookingSlotDialog = ({ open, onClose, interviewerId, onSlotSelected }) => {
     const [availableSlots, setAvailableSlots] = useState([]);
@@ -41,6 +33,7 @@ const BookingSlotDialog = ({ open, onClose, interviewerId, onSlotSelected }) => 
     const [selectedSlot, setSelectedSlot] = useState(null);
     const [currentMonth, setCurrentMonth] = useState(new Date());
     const [selectedDate, setSelectedDate] = useState(null);
+    const isLoading = useLoading();
 
     // Fetch available slots
     useEffect(() => {
@@ -69,9 +62,7 @@ const BookingSlotDialog = ({ open, onClose, interviewerId, onSlotSelected }) => 
                 });
 
                 if (response.success && response.data) {
-                    const availableData = response.data.filter(
-                        (slot) => !slot.status || slot.status === 0
-                    );
+                    const availableData = response.data.filter((slot) => !slot.status || slot.status === 0);
                     allSlots.push(...availableData);
                 }
             }
@@ -84,7 +75,7 @@ const BookingSlotDialog = ({ open, onClose, interviewerId, onSlotSelected }) => 
             todayDate.setHours(0, 0, 0, 0);
             setSelectedDate(todayDate);
         } catch (err) {
-                                        setError("Error loading data: " + err.message);
+            setError("Error loading data: " + err.message);
             console.error("Error fetching slots:", err);
         } finally {
             setLoading(false);
@@ -135,7 +126,7 @@ const BookingSlotDialog = ({ open, onClose, interviewerId, onSlotSelected }) => 
         if (isPastDate(date)) {
             return;
         }
-        
+
         const slotsForThisDate = getSlotsForDate(date);
         if (slotsForThisDate.length > 0) {
             setSelectedDate(date);
@@ -147,7 +138,7 @@ const BookingSlotDialog = ({ open, onClose, interviewerId, onSlotSelected }) => 
         if (isPastSlot(slot)) {
             return; // Don't allow selecting past slots
         }
-        
+
         setSelectedSlot(slot);
     };
 
@@ -188,9 +179,7 @@ const BookingSlotDialog = ({ open, onClose, interviewerId, onSlotSelected }) => 
 
     return (
         <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-            <DialogTitle sx={{ fontWeight: 600, fontSize: "1.25rem", pb: 1 }}>
-                Select Date & Time
-            </DialogTitle>
+            <DialogTitle sx={{ fontWeight: 600, fontSize: "1.25rem", pb: 1 }}>Select Date & Time</DialogTitle>
 
             <DialogContent>
                 <Box sx={{ mt: 2 }}>
@@ -206,11 +195,7 @@ const BookingSlotDialog = ({ open, onClose, interviewerId, onSlotSelected }) => 
                             <Box>
                                 <Stack spacing={2}>
                                     {/* Month Header */}
-                                    <Stack
-                                        direction="row"
-                                        alignItems="center"
-                                        justifyContent="space-between"
-                                    >
+                                    <Stack direction="row" alignItems="center" justifyContent="space-between">
                                         <IconButton size="small" onClick={handlePrevMonth}>
                                             <ChevronLeftIcon />
                                         </IconButton>
@@ -248,13 +233,12 @@ const BookingSlotDialog = ({ open, onClose, interviewerId, onSlotSelected }) => 
                                             {Array.from({ length: Math.ceil(calendarDays.length / 7) }).map(
                                                 (_, weekIdx) => (
                                                     <TableRow key={weekIdx}>
-                                                        {calendarDays.slice(weekIdx * 7, weekIdx * 7 + 7).map(
-                                                            (day, dayIdx) => {
+                                                        {calendarDays
+                                                            .slice(weekIdx * 7, weekIdx * 7 + 7)
+                                                            .map((day, dayIdx) => {
                                                                 const hasSlot =
                                                                     day &&
-                                                                    availableDates.some((d) =>
-                                                                        isSameDay(d, day)
-                                                                    );
+                                                                    availableDates.some((d) => isSameDay(d, day));
                                                                 const isSelected =
                                                                     day && selectedDate && isSameDay(day, selectedDate);
 
@@ -268,9 +252,7 @@ const BookingSlotDialog = ({ open, onClose, interviewerId, onSlotSelected }) => 
                                                                             border: "none",
                                                                             opacity: hasSlot ? 1 : 0.4,
                                                                         }}
-                                                                        onClick={() =>
-                                                                            hasSlot && handleDateClick(day)
-                                                                        }
+                                                                        onClick={() => hasSlot && handleDateClick(day)}
                                                                     >
                                                                         {day ? (
                                                                             <Box
@@ -289,17 +271,15 @@ const BookingSlotDialog = ({ open, onClose, interviewerId, onSlotSelected }) => 
                                                                                     color: isSelected
                                                                                         ? "white"
                                                                                         : "text.primary",
-                                                                                    fontWeight: isSelected
-                                                                                        ? 600
-                                                                                        : 500,
+                                                                                    fontWeight: isSelected ? 600 : 500,
                                                                                     borderRadius: "8px",
                                                                                     fontSize: "0.875rem",
                                                                                     transition: "all 0.2s",
                                                                                     "&:hover": hasSlot
                                                                                         ? {
-                                                                                            bgcolor: "#6366F1",
-                                                                                            color: "white",
-                                                                                        }
+                                                                                              bgcolor: "#6366F1",
+                                                                                              color: "white",
+                                                                                          }
                                                                                         : {},
                                                                                 }}
                                                                             >
@@ -308,10 +288,9 @@ const BookingSlotDialog = ({ open, onClose, interviewerId, onSlotSelected }) => 
                                                                         ) : null}
                                                                     </TableCell>
                                                                 );
-                                                            }
-                                                        )}
+                                                            })}
                                                     </TableRow>
-                                                )
+                                                ),
                                             )}
                                         </TableBody>
                                     </Table>
@@ -349,8 +328,12 @@ const BookingSlotDialog = ({ open, onClose, interviewerId, onSlotSelected }) => 
                                                             p: 1.5,
                                                             cursor: "pointer",
                                                             border: "1px solid",
-                                                            borderColor: selectedSlot?.id === slot.id ? "#4F46E5" : "#E5E7EB",
-                                                            bgcolor: selectedSlot?.id === slot.id ? "#6366F1" : "background.paper",
+                                                            borderColor:
+                                                                selectedSlot?.id === slot.id ? "#4F46E5" : "#E5E7EB",
+                                                            bgcolor:
+                                                                selectedSlot?.id === slot.id
+                                                                    ? "#6366F1"
+                                                                    : "background.paper",
                                                             transition: "all 0.2s ease-in-out",
                                                             "&:hover": {
                                                                 borderColor: "#4F46E5",
@@ -363,21 +346,24 @@ const BookingSlotDialog = ({ open, onClose, interviewerId, onSlotSelected }) => 
                                                             alignItems="center"
                                                             justifyContent="space-between"
                                                         >
-                                                            <Stack
-                                                                direction="row"
-                                                                spacing={1}
-                                                                alignItems="center"
-                                                            >
+                                                            <Stack direction="row" spacing={1} alignItems="center">
                                                                 <AccessTimeIcon
                                                                     fontSize="small"
                                                                     sx={{
-                                                                        color: selectedSlot?.id === slot.id ? "white" : "#4F46E5",
+                                                                        color:
+                                                                            selectedSlot?.id === slot.id
+                                                                                ? "white"
+                                                                                : "#4F46E5",
                                                                     }}
                                                                 />
                                                                 <Typography
                                                                     variant="body2"
                                                                     fontWeight={600}
-                                                                    color={selectedSlot?.id === slot.id ? "white" : "#4F46E5"}
+                                                                    color={
+                                                                        selectedSlot?.id === slot.id
+                                                                            ? "white"
+                                                                            : "#4F46E5"
+                                                                    }
                                                                 >
                                                                     {parseTime(slot.startTime)} -{" "}
                                                                     {parseTime(slot.endTime)}
@@ -447,7 +433,7 @@ const BookingSlotDialog = ({ open, onClose, interviewerId, onSlotSelected }) => 
                             color: "#9CA3AF",
                         },
                     }}
-                    disabled={!selectedSlot || loading}
+                    loading={isLoading}
                 >
                     Continue
                 </Button>
