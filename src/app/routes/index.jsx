@@ -1,5 +1,4 @@
 import MainLayout from "../layouts/MainLayout";
-import DefaultLayout from "../layouts/DefaultLayout";
 import { adminRoutes } from "./adminRoutes";
 import { authRoutes } from "./authRoutes";
 import { interviewerRoutes } from "./interviewerRoutes";
@@ -17,7 +16,13 @@ import InterviewRoomPage from "../../features/interview/pages/InterviewRoomPage/
 
 export const routes = [
     { path: "/", element: <Navigate to="/home" replace /> },
+
+    // Auth routes
     { element: <EmptyLayout />, children: authRoutes },
+
+    // Home page (public)
+    { element: <MainLayout />, children: [{ path: "/home", element: <HomePage /> }] },
+
     // Profile route - accessible by all authenticated users
     {
         element: (
@@ -27,6 +32,7 @@ export const routes = [
         ),
         children: [{ path: "/user/profile", element: <UserProfilePage /> }],
     },
+
     {
         element: (
             <ProtectedRoute allowedRoles={[ROLES.INTERVIEWEE, ROLES.INTERVIEWER]}>
@@ -34,41 +40,25 @@ export const routes = [
             </ProtectedRoute>
         ),
         children: [
-            {
-                element: <MainLayout />,
-                children: [{ path: "/interview", element: <InterviewRoomListPage /> }],
-            },
-            {
-                element: <EmptyLayout />,
-                children: [{ path: "/interview/room/:roomId", element: <InterviewRoomPage /> }],
-            },
+            { path: "/interview", element: <MainLayout />, children: [{ index: true, element: <InterviewRoomListPage /> }] },
+            { path: "/interview/room/:roomId", element: <InterviewRoomPage /> },
         ],
     },
+
     // Public routes
     {
         element: <MainLayout />,
         children: [{ path: "/interviewer/:id", element: <PublicInterviewerProfilePage /> }],
     },
+
+    // Interviewee specific routes
     {
         element: (
             <ProtectedRoute allowedRoles={[ROLES.INTERVIEWEE]}>
                 <MainLayout />
             </ProtectedRoute>
         ),
-        children: intervieweeRoutes,
-    },
-    {
-        element: <MainLayout />,
-        children: [
-            { path: "/interviewer/:id", element: <PublicInterviewerProfilePage /> },
-            { path: "/profile/:id", element: <InterviewerProfilePage /> },
-        ],
-        element: (
-            <ProtectedRoute allowedRoles={[ROLES.INTERVIEWER]}>
-                <MainLayout />
-            </ProtectedRoute>
-        ),
-        children: interviewerRoutes,
+        children: [...intervieweeRoutes, { path: "/profile/:id", element: <InterviewerProfilePage /> }],
     },
     {
         element: (
@@ -77,5 +67,15 @@ export const routes = [
             </ProtectedRoute>
         ),
         children: adminRoutes,
+    },
+
+    // Interviewer specific routes
+    {
+        element: (
+            <ProtectedRoute allowedRoles={[ROLES.INTERVIEWER]}>
+                <MainLayout />
+            </ProtectedRoute>
+        ),
+        children: interviewerRoutes,
     },
 ];

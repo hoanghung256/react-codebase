@@ -1,13 +1,16 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { BE_BASE_URL } from "../../../../common/constants/env";
 import * as signalR from "@microsoft/signalr";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import useUser from '../../../../common/hooks/useUser';
-import { Box } from "@mui/material";
+import { Box, CircularProgress, Typography } from "@mui/material";
 import QuestionPanel from "./QuestionPanel";
 import VideoPanel from "./VideoPanel";
 import CodeEditorPanel from "./CodeEditorPanel";
 import { ROLES } from "../../../../common/constants/common.js";
+import { callApi } from "../../../../common/utils/apiConnector.js";
+import { METHOD } from "../../../../common/constants/api.js";
+import { INTERVIEW_ROOM_STATUS } from "../../../../common/constants/status.js";
 
 const ICE_SERVERS = [{ urls: "stun:stun.l.google.com:19302" }];
 
@@ -74,6 +77,8 @@ function InterviewRoomPage() {
     const localStreamRef = useRef(null);
     const remotePeerIdRef = useRef(null);
     const iceCandidatesQueue = useRef([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     // --- Resizable layout state ---
     const containerRef = useRef(null);
@@ -142,7 +147,39 @@ function InterviewRoomPage() {
         };
     }, [dragging]);
 
+    const checkRoomStatus = useCallback(async () => {
+        if (!user) return;
+        try {
+            setLoading(true);
+            const res = await callApi({
+                method: METHOD.GET,
+                endpoint: `/interviewroom`,
+            });
+
+            const room = res.data.find(item => item.id === Number(roomId));
+            if (room.status !== INTERVIEW_ROOM_STATUS.ON_GOING &&
+                room.status !== INTERVIEW_ROOM_STATUS.COMPLETED) {
+                setError("This interview is not in progress. You will be redirected.");
+                setTimeout(() => navigate("/interview"), 3000);
+            } else {
+                setLoading(false);
+            }
+        } catch (err) {
+            console.error("Failed to fetch room details:", err);
+            setError("Failed to load interview room. You will be redirected.");
+            setTimeout(() => navigate("/interview"), 3000);
+        }
+    }, [roomId, navigate, user]);
+
     useEffect(() => {
+        if (user) {
+            checkRoomStatus();
+        }
+    }, [user, checkRoomStatus]);
+
+    useEffect(() => {
+        if (loading || error) return;
+
         const conn = new signalR.HubConnectionBuilder()
             .withUrl(`${BE_BASE_URL}/hubs/interviewroom?userId=${user?.id || 1}&role=${user?.role}`)
             .withAutomaticReconnect()
@@ -166,11 +203,11 @@ function InterviewRoomPage() {
             setMyId(newId ?? null);
             console.log("Reconnected with id:", newId);
             // Re-join the room with the new connection ID
-            // conn.invoke("JoinRoom", roomId)
-            //     .then(() => {
-            //         console.log("Re-joined room", roomId, "with new connection ID:", newId);
-            //     })
-            //     .catch(console.error);
+            conn.invoke("JoinRoom", roomId)
+                .then(() => {
+                    console.log("Re-joined room", roomId, "with new connection ID:", newId);
+                })
+                .catch(console.error);
         });
 
         conn.on("UserJoined", (connectionId) => {
@@ -278,7 +315,7 @@ function InterviewRoomPage() {
             // Create answer
             const answer = await pcRef.current.createAnswer();
             await pcRef.current.setLocalDescription(answer);
-            conn.invoke("SendAnswer", fromId, answer.sdp);
+            await conn.invoke("SendAnswer", fromId, answer.sdp);
             console.log(
                 "Sent answer to",
                 fromId,
@@ -322,11 +359,11 @@ function InterviewRoomPage() {
         });
 
         conn.on("ReceiveCode", (changes, codeLang) => {
-            if (language === codeLang && editorRef.current) {
+            if (editorRef.current) {
                 isExternalChange.current = true;
                 // Apply the changes received from the server
                 const currentPosition = editorRef.current.getPosition();
-                editorRef.current.executeEdits("remote", changes);
+                editorRef.current.setValue(changes);
                 if (currentPosition) {
                     editorRef.current.setPosition(currentPosition);
                 }
@@ -378,7 +415,7 @@ function InterviewRoomPage() {
             }
             if (pcRef.current) pcRef.current.close();
         };
-    }, [roomId, user?.id, user?.role]);
+    }, [roomId, user?.id, user?.role, loading, error]);
 
     async function startLocalStream({ video = true, audio = true } = {}) {
         if (localStreamRef.current) return localStreamRef.current;
@@ -610,26 +647,43 @@ function InterviewRoomPage() {
     };
 
     const handleCodeChange = (value, event) => {
-        if (isExternalChange.current) {
+        // The 'value' parameter is the full, current code in the editor.
+        // We use it instead of event.changes.
+        if (isExternalChange.current || !connRef.current) {
             return;
         }
 
-        // The candidate sends the changes to the server.
-        // The interviewer's changes are local until they run code or change language.
-        if (user?.role !== ROLES.INTERVIEWER && connRef.current && event.changes.length > 0) {
-            // No need to debounce when sending lightweight changes
-            connRef.current.invoke("SendCode", roomId, event.changes, language);
+        // Debounce the code sending to avoid flooding the server
+        if (sendCodeTimeout.current) {
+            clearTimeout(sendCodeTimeout.current);
+        }
+
+        // Only the interviewee sends code changes automatically.
+        if (user?.role === ROLES.INTERVIEWEE) {
+            sendCodeTimeout.current = setTimeout(() => {
+                connRef.current.invoke("SendCode", roomId, value, language).catch(console.error);
+            }, 300); // Send after 300ms of inactivity
         }
    };
 
-    const handleLanguageChange = (e) => {
+    const handleLanguageChange = async (e) => {
         const newLang = e.target.value;
         const oldLang = language;
         setLanguage(newLang);
 
         if (connRef.current) {
             const oldCode = editorRef.current?.getValue();
-            connRef.current.invoke("SendCode", roomId, oldCode, oldLang);
+            // console.log(roomId);
+            // console.log(oldCode);
+            // console.log(oldLang);
+            // connRef.current.invoke("SendCode", roomId, oldCode, oldLang);
+            try {
+                // Await the SendCode invocation to handle potential errors
+                await connRef.current.invoke("SendCode", roomId, oldCode, oldLang);
+                console.log(`Sent old code for language ${oldLang} to server.`);
+            } catch (error) {
+                console.error(`Error sending old code for language ${oldLang}:`, error);
+            }
         }
         // const newCode = languages[newLang].example;
         // setCode(newCode);
@@ -651,7 +705,14 @@ function InterviewRoomPage() {
         }));
 
         if (connRef.current) {
-            connRef.current.invoke("SendLanguage", roomId, newLang);
+            // connRef.current.invoke("SendLanguage", roomId, newLang);
+            try {
+                // Await the SendLanguage invocation
+                await connRef.current.invoke("SendLanguage", roomId, newLang);
+                console.log(`Sent new language ${newLang} to server.`);
+            } catch (error) {
+                console.error(`Error sending new language ${newLang}:`, error);
+            }
         }
     };
 
@@ -871,6 +932,17 @@ function InterviewRoomPage() {
         background: "#e5e7eb",
         userSelect: "none",
     };
+
+    if (loading || error) {
+        return (
+            <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100vh" }}>
+                {loading && !error && <CircularProgress />}
+                <Typography variant="h6" sx={{ mt: 2 }}>
+                    {error ? error : "Verifying interview status..."}
+                </Typography>
+            </Box>
+        );
+    }
 
     return (
         <Box sx={{ display: "flex", flexDirection: "column", height: "100vh" }}>
