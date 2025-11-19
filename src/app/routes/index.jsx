@@ -9,12 +9,33 @@ import PublicInterviewerProfilePage from "../../features/profiles/interviewer/pa
 import EmptyLayout from "../layouts/EmptyLayout";
 import ProtectedRoute from "../../common/components/ProtectedRoute";
 import { ROLES } from "../../common/constants/common";
+import HomePage from "../../features/home/pages/HomePage";
+import UserProfilePage from "../../features/profile/pages/UserProfilePage";
 import InterviewRoomListPage from "../../features/interview/pages/InterviewRoomListPage/InterviewRoomListPage";
 import InterviewRoomPage from "../../features/interview/pages/InterviewRoomPage/InterviewRoomPage";
 
 export const routes = [
     { path: "/", element: <Navigate to="/home" replace /> },
     { element: <EmptyLayout />, children: authRoutes },
+    // Profile route - accessible by all authenticated users
+    {
+        element: (
+            <ProtectedRoute allowedRoles={[ROLES.INTERVIEWEE, ROLES.INTERVIEWER, ROLES.ADMIN]}>
+                <MainLayout />
+            </ProtectedRoute>
+        ),
+        children: [
+            { path: "/profile", element: <UserProfilePage /> }
+        ],
+    },
+    {
+        element: (
+            <ProtectedRoute allowedRoles={[ROLES.INTERVIEWEE]}>
+                <MainLayout />
+            </ProtectedRoute>
+        ),
+        children: intervieweeRoutes,
+    },
     {
         element: (
             <ProtectedRoute allowedRoles={[ROLES.INTERVIEWER]}>
@@ -30,14 +51,6 @@ export const routes = [
             </ProtectedRoute>
         ),
         children: adminRoutes,
-    },
-    {
-        element: (
-            <ProtectedRoute allowedRoles={[ROLES.INTERVIEWEE]}>
-                <MainLayout />
-            </ProtectedRoute>
-        ),
-        children: intervieweeRoutes,
     },
     {
         element: (
@@ -57,6 +70,8 @@ export const routes = [
     // Public routes
     {
         element: <DefaultLayout />,
-        children: [{ path: "/interviewer/:id", element: <PublicInterviewerProfilePage /> }],
+        children: [
+            { path: "/interviewer/:id", element: <PublicInterviewerProfilePage /> }
+        ],
     },
 ];

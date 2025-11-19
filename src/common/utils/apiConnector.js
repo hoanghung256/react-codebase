@@ -49,10 +49,10 @@ export const callApi = async ({ method, endpoint, arg, displaySuccessMessage = f
             localStorage.removeItem("user");
             window.location.href = "/login";
         } else if (error.status == HTTP_RESPONSE_STATUS_CODE.FORBIDDENT) {
-            alert("You do not have permission to perform this action.");
+            toast.error("You do not have permission to perform this action.");
             window.location.href = "/";
         } else if (alertErrorMessage) {
-            alert(error.message || "An error occurred");
+            toast.error(error.response?.data?.message || error.message || "An error occurred");
         } else {
             throw error;
         }
