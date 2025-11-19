@@ -37,6 +37,7 @@ import {
     Close as CloseIcon,
     Save as SaveIcon,
 } from "@mui/icons-material";
+import BankSelection from "./BankSelection";
 
 function getRoleFromJwt() {
     try {
@@ -107,6 +108,8 @@ function InterviewerProfilePage() {
                         ...res.data,
                         skills: res.data.skills?.map((s) => s.name || s) || [],
                         companies: res.data.companies?.map((c) => c.name || c) || [],
+                        bankBinNumber: res.data.bankBinNumber || "",
+                        bankAccountNumber: res.data.bankAccountNumber || "",
                     });
                 } else {
                     setError(res.message || "Failed to load profile");
@@ -212,6 +215,8 @@ function InterviewerProfilePage() {
                 bio: profile.bio || "",
                 skillIds,
                 companyIds,
+                bankBinNumber: profile.bankBinNumber || "",
+                bankAccountNumber: String(profile.bankAccountNumber || "").trim(),
             };
 
             const res = await callApi({
@@ -459,6 +464,52 @@ function InterviewerProfilePage() {
                                             >
                                                 {profile.portfolioUrl}
                                             </Link>
+                                        ) : (
+                                            <Typography color="text.secondary">Not provided</Typography>
+                                        )
+                                    }
+                                />
+
+                                {/* Bank BIN */}
+                                <InfoRow
+                                    icon={<LinkIcon fontSize="small" />}
+                                    label="Bank"
+                                    content={
+                                        editMode ? (
+                                            <BankSelection
+                                                valueBin={profile?.bankBinNumber || ""}
+                                                onBankBinChange={(bin) =>
+                                                    setProfile((prev) => ({ ...prev, bankBinNumber: bin }))
+                                                }
+                                            />
+                                        ) : profile?.bankBinNumber ? (
+                                            `BIN: ${profile.bankBinNumber}`
+                                        ) : (
+                                            <Typography color="text.secondary">Not provided</Typography>
+                                        )
+                                    }
+                                />
+
+                                {/* Bank Account Number */}
+                                <InfoRow
+                                    icon={<LinkIcon fontSize="small" />}
+                                    label="Bank Account Number"
+                                    content={
+                                        editMode ? (
+                                            <TextField
+                                                fullWidth
+                                                size="small"
+                                                placeholder="Enter bank account number"
+                                                value={profile?.bankAccountNumber || ""}
+                                                onChange={(e) =>
+                                                    setProfile((prev) => ({
+                                                        ...prev,
+                                                        bankAccountNumber: e.target.value,
+                                                    }))
+                                                }
+                                            />
+                                        ) : profile?.bankAccountNumber ? (
+                                            profile.bankAccountNumber
                                         ) : (
                                             <Typography color="text.secondary">Not provided</Typography>
                                         )
