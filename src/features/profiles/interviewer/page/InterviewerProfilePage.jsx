@@ -37,6 +37,10 @@ import {
     Close as CloseIcon,
     Save as SaveIcon,
 } from "@mui/icons-material";
+import { CameraAlt as CameraIcon } from "@mui/icons-material";
+import { uploadImage } from "../../../../firebase/service/storage";
+import { useDispatch } from "react-redux";
+import { setUserData } from "../../../../common/store/authSlice";
 import BankSelection from "./BankSelection";
 
 function getRoleFromJwt() {
@@ -63,6 +67,7 @@ function getRoleFromJwt() {
 function InterviewerProfilePage() {
     const { id: routeId } = useParams();
     const user = useUser();
+    const dispatch = useDispatch();
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -72,6 +77,7 @@ function InterviewerProfilePage() {
     const [saveSuccess, setSaveSuccess] = useState(false);
     const [allSkills, setAllSkills] = useState([]);
     const [allCompanies, setAllCompanies] = useState([]);
+    const [avatarKey, setAvatarKey] = useState(Date.now());
 
     const tokenRole = useMemo(() => {
         const r = getRoleFromJwt();
@@ -84,18 +90,16 @@ function InterviewerProfilePage() {
         tokenRole === "interviewer";
 
     const endpoint = useMemo(() => {
-        // If route has an explicit id, always fetch that interviewer profile by id
         if (routeId) {
             return interviewerProfileEndPoints.VIEW_OWN_INTERVIEWER_PROFILE.replace("{id}", routeId);
         }
         if (!user?.id) return null;
-        // Otherwise: interviewer views own profile; interviewee views their mapped interviewer profile
+
         return isInterviewer
             ? interviewerProfileEndPoints.VIEW_OWN_INTERVIEWER_PROFILE.replace("{id}", user.id)
             : interviewerProfileEndPoints.VIEW_PROFILE_BY_INTERVIEWEE.replace("{id}", user.id);
     }, [routeId, user?.id, user?.role]);
 
-    // Fetch profile
     useEffect(() => {
         const fetchProfile = async () => {
             if (!endpoint) return;
@@ -176,7 +180,37 @@ function InterviewerProfilePage() {
         );
     }
 
-    const avatarUrl = profile?.avatar || profile?.user?.profilePicture || "";
+    const onPick = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const localUrl = URL.createObjectURL(file);
+
+        setProfile((prev) => ({
+            ...prev,
+            user: { ...(prev?.user || {}), profilePicture: localUrl },
+        }));
+
+        try {
+            const data = await uploadImage(user.id, file);
+            console.log("ollo", data);
+
+            if (data?.avatar) {
+                const updatedUser = { ...user, profilePicture: data.avatar };
+                // localStorage.setItem("user", JSON.stringify(updatedUser));
+                dispatch(setUserData(updatedUser));
+
+                setProfile((prev) => ({
+                    ...prev,
+                    user: { ...(prev?.user || {}), profilePicture: data.avatar },
+                }));
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const avatarUrl = profile?.profilePicture || profile?.user?.profilePicture || "";
     const fullName = profile?.user?.fullName || profile?.fullName || user?.fullName || "Unnamed";
     const email = profile?.user?.email || user?.email || "-";
     const years = profile?.experienceYears ?? profile?.yearsOfExperience;
@@ -208,7 +242,7 @@ function InterviewerProfilePage() {
                 id: profile.id,
                 fullName: profile.user?.fullName || profile.fullName || "",
                 email: profile.user?.email || profile.email || "",
-                profilePicture: profile.user?.profilePicture || profile.profilePicture || "",
+                profilePicture: avatarUrl,
                 portfolioUrl: profile.portfolioUrl || "",
                 currentAmount: Number(profile.currentAmount) || 0,
                 experienceYears: Number(profile.experienceYears) || 0,
@@ -230,6 +264,7 @@ function InterviewerProfilePage() {
                 setEditMode(false);
                 setSaveSuccess(true);
                 setProfile((prev) => ({ ...prev, ...payload }));
+                dispatch(setUserData(res.data.user));
             } else {
                 setError(res.message || "Failed to save profile.");
             }
@@ -258,6 +293,9 @@ function InterviewerProfilePage() {
         .map((c) => (typeof c === "object" ? c?.name : c))
         .filter(Boolean);
 
+    const isSelf = !routeId || String(routeId) === String(user?.id);
+    const canEdit = isInterviewer && isSelf;
+
     return (
         <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 1100, mx: "auto" }}>
             <Fade in={saveSuccess}>
@@ -266,13 +304,6 @@ function InterviewerProfilePage() {
                 </Alert>
             </Fade>
 
-            {error && (
-                <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
-                    {error}
-                </Alert>
-            )}
-
-            {/* Header Card with Cover */}
             <Card
                 elevation={0}
                 sx={{
@@ -282,7 +313,6 @@ function InterviewerProfilePage() {
                     borderColor: "divider",
                 }}
             >
-                {/* Cover Banner */}
                 <Box
                     sx={{
                         height: 160,
@@ -290,7 +320,6 @@ function InterviewerProfilePage() {
                         position: "relative",
                     }}
                 >
-                    {/** Only allow editing when interviewer is viewing their own profile (no route id or route id matches) */}
                     {(() => {
                         const isSelf = !routeId || String(routeId) === String(user?.id);
                         const canEdit = isInterviewer && isSelf;
@@ -317,16 +346,39 @@ function InterviewerProfilePage() {
                     <Box sx={{ display: "flex", flexDirection: { xs: "column", sm: "row" }, gap: 3 }}>
                         {/* Avatar */}
                         <Box sx={{ mt: -6, position: "relative" }}>
-                            <Avatar
-                                src={avatarUrl}
-                                alt={fullName}
-                                sx={{
-                                    width: 140,
-                                    height: 140,
-                                    border: "5px solid white",
-                                    boxShadow: 3,
-                                }}
-                            />
+                            <Box sx={{ position: "relative", display: "inline-block" }}>
+                                <Avatar
+                                    src={avatarUrl}
+                                    key={avatarKey}
+                                    alt={fullName}
+                                    sx={{
+                                        width: 140,
+                                        height: 140,
+                                        border: "5px solid white",
+                                        boxShadow: 3,
+                                    }}
+                                />
+                                {canEdit && (
+                                    <IconButton
+                                        component="label"
+                                        sx={{
+                                            position: "absolute",
+                                            bottom: 0,
+                                            right: 0,
+                                            bgcolor: "primary.main",
+                                            color: "white",
+                                            width: 40,
+                                            height: 40,
+                                            "&:hover": {
+                                                bgcolor: "primary.dark",
+                                            },
+                                        }}
+                                    >
+                                        <CameraIcon fontSize="small" />
+                                        <input hidden type="file" accept="image/*" onChange={onPick} />
+                                    </IconButton>
+                                )}
+                            </Box>
                         </Box>
 
                         <Box sx={{ flex: 1, pt: { xs: 0, sm: 2 } }}>

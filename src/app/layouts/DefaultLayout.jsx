@@ -2,13 +2,11 @@ import { Link, Outlet, useNavigate } from "react-router-dom";
 import ScrollTopFab from "./ScrollTopFab";
 import useUser from "../../common/hooks/useUser";
 import { AppBar, Toolbar, Container, Typography, Box, CssBaseline, Button, Avatar } from "@mui/material";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { setToken, setUserData } from "../../common/store/authSlice";
 
 const DefaultLayout = () => {
-    const user = useUser();
-    const avatarUrl = user?.profilePicture || "";
-    // const fullName = user?.fullName || "Guest";
+    const { userData } = useSelector((state) => state.auth || {});
     const navigate = useNavigate();
     const dispatch = useDispatch();
 
@@ -30,11 +28,13 @@ const DefaultLayout = () => {
                         <Typography variant="h6" sx={{ fontWeight: 700, flexGrow: 1 }}>
                             Intervu
                         </Typography>
-                        <Link to="/profile">
-                            <Avatar src={avatarUrl} alt="Profile" variant="body2" color="text.secondary" />
-                        </Link>
+                        {userData?.profilePicture ? (
+                            <img src={userData.profilePicture} alt="User Avatar" className="avatar-img" />
+                        ) : (
+                            <Avatar sx={{ bgcolor: "primary.main", width: 40, height: 40 }} />
+                        )}
                         <Button variant="outlined" sx={{ ml: 2 }} onClick={logout}>
-                            Sign Out
+                            Sign In
                         </Button>
                     </Toolbar>
                 </Container>

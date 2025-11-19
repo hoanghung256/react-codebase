@@ -3,6 +3,7 @@ import InterviewerProfilePage from "../../features/profiles/interviewer/page/Int
 
 export const interviewerRoutes = [
     { path: "/profile", element: <InterviewerProfilePage /> },
+    { path: "/interview", element: <InterviewRoomListPage /> },
     { path: "/profile/:id", element: <InterviewerProfilePage /> },
 
     { path: "/schedule", element: <ScheduleManagement /> },

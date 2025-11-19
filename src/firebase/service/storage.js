@@ -1,27 +1,34 @@
-import { initializeApp, getApps, getApp } from "firebase/app";
-import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
+import { METHOD } from "../../common/constants/api";
+import { callApi } from "../../common/utils/apiConnector";
+import { firebaseEndPoints } from "../service/firebaseApi";
 
-function getFirebase() {
-    const firebaseConfig = {
-        apiKey: "AIzaSyA7Ua2i0af4fSOOvf8W9M6nZh8QkPp7P9o",
-        authDomain: "ntervu-4abd6.firebaseapp.com",
-        projectId: "ntervu-4abd6",
-        storageBucket: "ntervu-4abd6.firebasestorage.app",
-        messagingSenderId: "504877747235",
-        appId: "1:504877747235:web:bfd5898ac1b063e1b87596",
-        measurementId: "G-RSZ088B9ME",
-    };
-    const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-    const storage = getStorage(app);
-    return { app, storage };
-}
+export const uploadImage = async (userId, file) => {
+    if (!userId) throw new Error("userId is required");
+    if (!file) throw new Error("file is required");
 
-/**
- * Get a download URL later if you only stored the path.
- * @param {string} path
- * @returns {Promise<string>}
- */
-export async function getFileDownloadURL(path) {
-    const { storage } = getFirebase();
-    return getDownloadURL(ref(storage, path));
-}
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const endpoint = firebaseEndPoints.UPLOAD_AVATAR.replace("{id}", userId);
+
+    const response = await callApi({
+        method: METHOD.POST,
+        endpoint,
+        arg: formData,
+    });
+
+    if (!response?.success) {
+        throw new Error(response?.message || "Upload failed");
+    }
+    return response.data;
+};
+
+export const getImages = async (userId) => {
+    const endpoint = firebaseEndPoints.GET_AVATAR.replace("{id}", userId);
+    return await callApi({ method: METHOD.GET, endpoint });
+};
+
+export const deleteImage = async (userId) => {
+    const endpoint = firebaseEndPoints.DELETE_AVATAR.replace("{id}", userId);
+    return await callApi({ method: METHOD.DELETE, endpoint });
+};

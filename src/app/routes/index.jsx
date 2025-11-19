@@ -10,6 +10,7 @@ import EmptyLayout from "../layouts/EmptyLayout";
 import ProtectedRoute from "../../common/components/ProtectedRoute";
 import { ROLES } from "../../common/constants/common";
 import HomePage from "../../features/home/pages/HomePage";
+import InterviewerProfilePage from "../../features/profiles/interviewer/page/InterviewerProfilePage";
 import UserProfilePage from "../../features/profile/pages/UserProfilePage";
 import InterviewRoomListPage from "../../features/interview/pages/InterviewRoomListPage/InterviewRoomListPage";
 import InterviewRoomPage from "../../features/interview/pages/InterviewRoomPage/InterviewRoomPage";
@@ -57,6 +58,11 @@ export const routes = [
         children: intervieweeRoutes,
     },
     {
+        element: <MainLayout />,
+        children: [
+            { path: "/interviewer/:id", element: <PublicInterviewerProfilePage /> },
+            { path: "/profile/:id", element: <InterviewerProfilePage /> },
+        ],
         element: (
             <ProtectedRoute allowedRoles={[ROLES.INTERVIEWER]}>
                 <MainLayout />
