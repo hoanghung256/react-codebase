@@ -6,7 +6,6 @@ import ScheduleManagement from "../../features/interviewer/pages/ScheduleManagem
 
 export const interviewerRoutes = [
     { path: "/profile", element: <InterviewerProfilePage /> },
-    { path: "/profile/:id", element: <InterviewerProfilePage /> },
     { path: "/interview", element: <InterviewRoomListPage /> },
     { path: "/schedule", element: <ScheduleManagement /> },
     {

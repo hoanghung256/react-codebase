@@ -10,6 +10,7 @@ import EmptyLayout from "../layouts/EmptyLayout";
 import ProtectedRoute from "../../common/components/ProtectedRoute";
 import { ROLES } from "../../common/constants/common";
 import HomePage from "../../features/home/pages/HomePage";
+import InterviewerProfilePage from "../../features/profiles/interviewer/page/InterviewerProfilePage";
 
 export const routes = [
     { path: "/", element: <Navigate to="/home" replace /> },
@@ -41,6 +42,9 @@ export const routes = [
     // Public routes
     {
         element: <DefaultLayout />,
-        children: [{ path: "/interviewer/:id", element: <PublicInterviewerProfilePage /> }],
+        children: [
+            { path: "/interviewer/:id", element: <PublicInterviewerProfilePage /> },
+            { path: "/profile/:id", element: <InterviewerProfilePage /> },
+        ],
     },
 ];

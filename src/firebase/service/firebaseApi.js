@@ -1,29 +1,7 @@
-export const getImages = async () => {
-    const res = await fetch(`${import.meta.env.VITE_API_URL}`);
-    if (!res.ok) throw new Error("Failed to fetch images");
-    return res.json();
-};
+import { BE_BASE_URL } from "../../common/constants/env";
 
-export const uploadImage = async (file) => {
-    const formData = new FormData();
-    formData.append("file", file);
-
-    const res = await fetch(`${import.meta.env.VITE_API_URL}`, {
-        method: "POST",
-        body: formData,
-    });
-    if (!res.ok) throw new Error("Upload failed");
-    return res.json();
-};
-
-export const deleteImage = async (fileName) => {
-    const res = await fetch(`${import.meta.env.VITE_API_URL}`, {
-        method: "DELETE",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ fileName: fileName }),
-    });
-    if (!res.ok) throw new Error("Delete failed");
-    return res.text();
+export const firebaseEndPoints = {
+    UPLOAD_AVATAR: BE_BASE_URL + "/firebase/upload-avatar/{id}",
+    GET_AVATAR: BE_BASE_URL + "/firebase/get-avatar/{id}",
+    DELETE_AVATAR: BE_BASE_URL + "/firebase/delete-avatar/{id}",
 };

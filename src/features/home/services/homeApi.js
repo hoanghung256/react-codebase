@@ -6,4 +6,4 @@ export const homeEndPoints = {
     GET_ALL_SKILLS: BE_BASE_URL + "/skills",
     FILTER_INTERVIEWERS: BE_BASE_URL + "/interviewers/filter",
     GET_INTERVIEWER_BY_ID: BE_BASE_URL + "/interviewers/",
-}
+};
