@@ -4,6 +4,9 @@ import { METHOD } from "../../../common/constants/api";
 import { authEndPoints } from "../services/authApi";
 import { useNavigate } from "react-router-dom";
 import useLoading from "../../../common/hooks/useLoading";
+import DarkVeil from './LoginPage/DarkVeil';
+import SplitText from "./LoginPage/SplitText";
+import { TextField, Button, Typography } from '@mui/material';
 
 function SignUpPage() {
     const navigate = useNavigate();
@@ -15,6 +18,9 @@ function SignUpPage() {
         formState: { errors },
     } = useForm();
     
+    const handleAnimationComplete = () => {
+        // optional callback when split text animation completes
+    };
 
     const onSubmit = async (data) => {
         const { success, data: responseData, message } = await callApi({
@@ -36,83 +42,225 @@ function SignUpPage() {
     };
 
     return (
-        <div style={{ maxWidth: 420, margin: "40px auto", padding: 24, border: "1px solid #e5e7eb", borderRadius: 8 }}>
-            <h2 style={{ marginBottom: 16 }}>Tạo tài khoản</h2>
-            <form onSubmit={handleSubmit(onSubmit)} noValidate>
-                <div style={{ marginBottom: 12 }}>
-                    <label htmlFor="fullName" style={{ display: "block", marginBottom: 6 }}>
-                        Họ và tên
-                    </label>
-                    <input
-                        id="fullName"
-                        type="text"
-                        placeholder="Nguyễn Văn A"
-                        {...register("fullName", {
-                            required: "Vui lòng nhập họ và tên",
-                            minLength: { value: 2, message: "Tên quá ngắn" },
-                        })}
-                        style={{ width: "100%", padding: "10px 12px", border: "1px solid #cbd5e1", borderRadius: 6 }}
-                    />
-                    {errors.fullName && (
-                        <span style={{ color: "#dc2626", fontSize: 12 }}>{errors.fullName.message}</span>
-                    )}
-                </div>
+        <div style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', overflow: 'hidden', background: '#ffffff' }}>
+            {/* LightVeil effect with pastel blue colors */}
+            <DarkVeil 
+                lightMode={true}
+                hueShift={200}
+                speed={0.3}
+                warpAmount={0.5}
+            />
+                       
+            {/* overlay container centers the signup card */}
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2, padding: '24px' }}>
+                {/* main two-column card */}
+                <div style={{ width: '960px', maxWidth: 'calc(100% - 48px)', display: 'flex', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.08)', border: 'none', minHeight: '560px', alignItems: 'stretch', background: '#fff' }}>
 
-                <div style={{ marginBottom: 12 }}>
-                    <label htmlFor="email" style={{ display: "block", marginBottom: 6 }}>
-                        Email
-                    </label>
-                    <input
-                        id="email"
-                        type="email"
-                        placeholder="you@example.com"
-                        {...register("email", {
-                            required: "Vui lòng nhập email",
-                            pattern: {
-                                value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                                message: "Email không hợp lệ",
-                            },
-                        })}
-                        style={{ width: "100%", padding: "10px 12px", border: "1px solid #cbd5e1", borderRadius: 6 }}
-                    />
-                    {errors.email && <span style={{ color: "#dc2626", fontSize: 12 }}>{errors.email.message}</span>}
-                </div>
+                    {/* left: info / promo column */}
+                    <div style={{ flex: 1, minHeight: '100%', padding: '40px 36px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'linear-gradient(135deg, #f8f9fc 0%, #e8eef5 30%, #dfe7f5 60%, #f5f7fa 100%)', position: 'relative', overflow: 'hidden', borderRight: '1px solid #f0f0f5' }}>
+                        
+                        {/* decorative floating circles */}
+                        <div style={{ position: 'absolute', top: '10%', right: '15%', width: '120px', height: '120px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(123,97,255,0.12) 0%, transparent 70%)', filter: 'blur(20px)' }}></div>
+                        <div style={{ position: 'absolute', bottom: '15%', left: '10%', width: '150px', height: '150px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(123,97,255,0.08) 0%, transparent 70%)', filter: 'blur(25px)' }}></div>
+                        
+                        {/* decorative grid pattern overlay */}
+                        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(rgba(123,97,255,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(123,97,255,0.06) 1px, transparent 1px)', backgroundSize: '40px 40px', opacity: 0.3 }}></div>
 
-                <div style={{ marginBottom: 16 }}>
-                    <label htmlFor="password" style={{ display: "block", marginBottom: 6 }}>
-                        Mật khẩu
-                    </label>
-                    <input
-                        id="password"
-                        type="password"
-                        placeholder="Tối thiểu 6 ký tự"
-                        {...register("password", {
-                            required: "Vui lòng nhập mật khẩu",
-                            minLength: { value: 6, message: "Mật khẩu tối thiểu 6 ký tự" },
-                        })}
-                        style={{ width: "100%", padding: "10px 12px", border: "1px solid #cbd5e1", borderRadius: 6 }}
-                    />
-                    {errors.password && (
-                        <span style={{ color: "#dc2626", fontSize: 12 }}>{errors.password.message}</span>
-                    )}
-                </div>
+                        <div style={{ textAlign: 'center', pointerEvents: 'none', position: 'relative', zIndex: 1 }}>
+                            <div style={{ marginBottom: '16px' }}>
+                                <SplitText
+                                    text="Intervu"
+                                    tag="h1"
+                                    className="text-3xl font-bold"
+                                    delay={35}
+                                    duration={0.9}
+                                    ease="power3.out"
+                                    splitType="chars"
+                                    from={{ opacity: 0, y: 20 }}
+                                    to={{ opacity: 1, y: 0 }}
+                                    threshold={0.1}
+                                    rootMargin="-100px"
+                                    textAlign="center"
+                                    onLetterAnimationComplete={handleAnimationComplete}
+                                    playOnMount={true}
+                                    loop={true}
+                                    loopDelay={1.2}
+                                    color="#2a2a3e"
+                                />
+                            </div>
+                            
+                            <div style={{ width: '80px', height: '2px', background: 'linear-gradient(90deg, transparent, rgba(123,97,255,0.8), transparent)', margin: '16px auto', borderRadius: '2px' }}></div>
+                            
+                            <div>
+                                <SplitText
+                                    text="Online Interview Support System"
+                                    tag="h2"
+                                    className="text-xl"
+                                    delay={45}
+                                    duration={0.9}
+                                    ease="power3.out"
+                                    splitType="chars"
+                                    from={{ opacity: 0, y: 20 }}
+                                    to={{ opacity: 1, y: 0 }}
+                                    threshold={0.1}
+                                    rootMargin="-100px"
+                                    textAlign="center"
+                                    onLetterAnimationComplete={handleAnimationComplete}
+                                    playOnMount={true}
+                                    loop={true}
+                                    loopDelay={1.2}
+                                    color="#5a5a7a"
+                                />
+                            </div>
+                            
+                            {/* decorative subtitle */}
+                            <div style={{ marginTop: '24px', fontSize: '13px', color: 'rgba(0,0,0,0.4)', letterSpacing: '0.5px', lineHeight: '1.6' }}>
+                                Join us to streamline your hiring process
+                            </div>
+                        </div>
+                    </div>
 
-                <button
-                    type="submit"
-                    disabled={isLoading}
-                    style={{
-                        width: "100%",
-                        padding: "10px 12px",
-                        background: isLoading ? "#94a3b8" : "#2563eb",
-                        color: "white",
-                        border: "none",
-                        borderRadius: 6,
-                        cursor: isLoading ? "not-allowed" : "pointer",
-                    }}
-                >
-                    {isLoading ? "Đang xử lý..." : "Đăng ký"}
-                </button>
-            </form>
+                    {/* right: signup column */}
+                    <div style={{ flex: 1, padding: '40px 36px', background: '#ffffff', color: '#1a1a2e', display: 'flex', flexDirection: 'column', gap: '16px', justifyContent: 'center', position: 'relative' }}>
+                        
+                        {/* decorative corner accent - top left */}
+                        <div style={{ position: 'absolute', top: 0, left: 0, width: '60px', height: '60px', background: 'linear-gradient(135deg, rgba(123,97,255,0.08) 0%, transparent 100%)', borderTopLeftRadius: '16px' }}></div>
+                        
+                        {/* decorative corner accent - bottom right */}
+                        <div style={{ position: 'absolute', bottom: 0, right: 0, width: '80px', height: '80px', background: 'linear-gradient(315deg, rgba(123,97,255,0.05) 0%, transparent 100%)', borderBottomRightRadius: '16px' }}></div>
+
+                        <div style={{ textAlign: 'center', marginBottom: '8px', position: 'relative', zIndex: 1 }}>
+                            <Typography variant="h4" style={{ fontSize: '32px', fontWeight: 700, color: '#1a1a2e', letterSpacing: '-0.5px' }}>
+                                Create Account
+                            </Typography>
+                            <div style={{ width: '60px', height: '3px', background: 'linear-gradient(90deg, transparent, #7B61FF, transparent)', margin: '12px auto 0', borderRadius: '2px' }}></div>
+                        </div>
+
+                        <form onSubmit={handleSubmit(onSubmit)} noValidate style={{ position: 'relative', zIndex: 1 }}>
+                            <div style={{ marginBottom: '14px' }}>
+                                <TextField
+                                    label="Full Name"
+                                    type="text"
+                                    variant="outlined"
+                                    fullWidth
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            borderRadius: '8px',
+                                            '& fieldset': { borderColor: 'rgba(0,0,0,0.15)' },
+                                            '&:hover fieldset': { borderColor: '#7B61FF' },
+                                            '&.Mui-focused fieldset': { borderColor: '#7B61FF' }
+                                        },
+                                        '& .MuiInputLabel-root': { color: 'rgba(0,0,0,0.6)' },
+                                        '& .MuiInputLabel-root.Mui-focused': { color: '#7B61FF' }
+                                    }}
+                                    {...register('fullName', { 
+                                        required: 'Full name is required',
+                                        minLength: { value: 2, message: 'Name is too short' }
+                                    })}
+                                    error={!!errors.fullName}
+                                    helperText={errors.fullName?.message}
+                                />
+                            </div>
+
+                            <div style={{ marginBottom: '14px' }}>
+                                <TextField
+                                    label="Email"
+                                    type="email"
+                                    variant="outlined"
+                                    fullWidth
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            borderRadius: '8px',
+                                            '& fieldset': { borderColor: 'rgba(0,0,0,0.15)' },
+                                            '&:hover fieldset': { borderColor: '#7B61FF' },
+                                            '&.Mui-focused fieldset': { borderColor: '#7B61FF' }
+                                        },
+                                        '& .MuiInputLabel-root': { color: 'rgba(0,0,0,0.6)' },
+                                        '& .MuiInputLabel-root.Mui-focused': { color: '#7B61FF' }
+                                    }}
+                                    {...register('email', { 
+                                        required: 'Email is required',
+                                        pattern: {
+                                            value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                                            message: 'Invalid email format',
+                                        }
+                                    })}
+                                    error={!!errors.email}
+                                    helperText={errors.email?.message}
+                                />
+                            </div>
+
+                            <div style={{ marginBottom: '20px' }}>
+                                <TextField
+                                    label="Password"
+                                    type="password"
+                                    variant="outlined"
+                                    fullWidth
+                                    sx={{
+                                        '& .MuiOutlinedInput-root': {
+                                            borderRadius: '8px',
+                                            '& fieldset': { borderColor: 'rgba(0,0,0,0.15)' },
+                                            '&:hover fieldset': { borderColor: '#7B61FF' },
+                                            '&.Mui-focused fieldset': { borderColor: '#7B61FF' }
+                                        },
+                                        '& .MuiInputLabel-root': { color: 'rgba(0,0,0,0.6)' },
+                                        '& .MuiInputLabel-root.Mui-focused': { color: '#7B61FF' }
+                                    }}
+                                    {...register('password', { 
+                                        required: 'Password is required',
+                                        minLength: { value: 6, message: 'Password must be at least 6 characters' }
+                                    })}
+                                    error={!!errors.password}
+                                    helperText={errors.password?.message}
+                                />
+                            </div>
+
+                            <div style={{ display: 'flex', justifyContent: 'center' }}>
+                                {isLoading ? (
+                                    <Typography color="#666">...Loading</Typography>
+                                ) : (
+                                    <Button
+                                        type="submit"
+                                        variant="contained"
+                                        disabled={isLoading}
+                                        fullWidth
+                                        sx={{
+                                            padding: '14px 28px',
+                                            borderRadius: '10px',
+                                            background: '#5B5FC7',
+                                            textTransform: 'none',
+                                            fontSize: '17px',
+                                            fontWeight: 700,
+                                            boxShadow: '0 4px 14px rgba(91, 95, 199, 0.4)',
+                                            transition: 'all 0.3s ease',
+                                            '&:hover': {
+                                                background: '#4A4EB8',
+                                                boxShadow: '0 6px 20px rgba(91, 95, 199, 0.6)',
+                                                transform: 'translateY(-2px)'
+                                            }
+                                        }}
+                                    >
+                                        Sign up
+                                    </Button>
+                                )}
+                            </div>
+                            
+                            <div style={{ textAlign: 'center', marginTop: '16px' }}>
+                                <Typography style={{ fontSize: '14px', color: 'rgba(0,0,0,0.6)' }}>
+                                    Already have an account?{' '}
+                                    <span 
+                                        onClick={() => navigate('/login')} 
+                                        style={{ color: '#7B61FF', cursor: 'pointer', fontWeight: 600, textDecoration: 'underline' }}
+                                    >
+                                        Sign in
+                                    </span>
+                                </Typography>
+                            </div>
+                        </form>
+                    </div>
+                
+                </div>
+            </div>
         </div>
     );
 }

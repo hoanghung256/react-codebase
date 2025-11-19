@@ -1,0 +1,8 @@
+import { BE_BASE_URL } from "../../../common/constants/env";
+
+export const profileEndPoints = {
+    GET_PROFILE: (userId) => `${BE_BASE_URL}/userprofile/${userId}`,
+    UPDATE_PROFILE: (userId) => `${BE_BASE_URL}/userprofile/${userId}`,
+    UPDATE_PASSWORD: (userId) => `${BE_BASE_URL}/userprofile/${userId}/password`,
+    UPDATE_AVATAR: (userId) => `${BE_BASE_URL}/userprofile/${userId}/profile-picture`,
+};
