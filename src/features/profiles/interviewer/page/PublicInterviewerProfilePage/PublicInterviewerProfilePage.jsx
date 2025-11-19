@@ -12,8 +12,6 @@ import {
     Chip,
     CircularProgress,
     Container,
-    Divider,
-    Grid,
     Stack,
     Typography,
     Link,
@@ -380,20 +378,7 @@ function PublicInterviewerProfilePage() {
                                             mb: 2
                                         }}
                                     >
-                                        Select coaching plan
-                                    </Button>
-
-                                    <Button
-                                        fullWidth
-                                        variant="text"
-                                        size="medium"
-                                        sx={{
-                                            color: "#4F46E5",
-                                            textTransform: "none",
-                                            fontWeight: 500
-                                        }}
-                                    >
-                                        Preview availability
+                                        Book Interview
                                     </Button>
                                 </CardContent>
                             </Card>

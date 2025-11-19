@@ -19,13 +19,23 @@ import {
     Paper,
     Rating,
     Container,
+    Fade,
+    Alert,
+    IconButton,
+    TextField,
+    Link,
+    Autocomplete,
 } from "@mui/material";
+
 import {
-    Star as StarIcon,
-    VideoCall as VideoCallIcon,
-    Assignment as AssignmentIcon,
-    Schedule as ScheduleIcon,
-    SwapHoriz as SwapIcon,
+    Edit as EditIcon,
+    Work as WorkIcon,
+    Person as PersonIcon,
+    Email as EmailIcon,
+    Link as LinkIcon,
+    Code as CodeIcon,
+    Close as CloseIcon,
+    Save as SaveIcon,
 } from "@mui/icons-material";
 
 function getRoleFromJwt() {

@@ -24,9 +24,29 @@ export const routes = [
                 <MainLayout />
             </ProtectedRoute>
         ),
+        children: [{ path: "/user/profile", element: <UserProfilePage /> }],
+    },
+    {
+        element: (
+            <ProtectedRoute allowedRoles={[ROLES.INTERVIEWEE, ROLES.INTERVIEWER]}>
+                <EmptyLayout />
+            </ProtectedRoute>
+        ),
         children: [
-            { path: "/profile", element: <UserProfilePage /> }
+            {
+                element: <MainLayout />,
+                children: [{ path: "/interview", element: <InterviewRoomListPage /> }],
+            },
+            {
+                element: <EmptyLayout />,
+                children: [{ path: "/interview/room/:roomId", element: <InterviewRoomPage /> }],
+            },
         ],
+    },
+    // Public routes
+    {
+        element: <MainLayout />,
+        children: [{ path: "/interviewer/:id", element: <PublicInterviewerProfilePage /> }],
     },
     {
         element: (
@@ -51,27 +71,5 @@ export const routes = [
             </ProtectedRoute>
         ),
         children: adminRoutes,
-    },
-    {
-        element: (
-            <ProtectedRoute allowedRoles={[ROLES.INTERVIEWEE, ROLES.INTERVIEWER]}>
-                <MainLayout />
-            </ProtectedRoute>
-        ),
-        children: [
-            { path: "/interview", element: <InterviewRoomListPage /> },
-            {
-                element: <EmptyLayout />,
-                children: [{ path: "/interview/room/:roomId", element: <InterviewRoomPage /> }],
-            },
-        ],
-    },
-
-    // Public routes
-    {
-        element: <DefaultLayout />,
-        children: [
-            { path: "/interviewer/:id", element: <PublicInterviewerProfilePage /> }
-        ],
     },
 ];

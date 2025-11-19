@@ -178,7 +178,7 @@ const BookingSlotDialog = ({ open, onClose, interviewerId, onSlotSelected }) => 
     const slotsForSelectedDate = selectedDate ? getSlotsForDate(selectedDate) : [];
 
     return (
-        <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+        <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
             <DialogTitle sx={{ fontWeight: 600, fontSize: "1.25rem", pb: 1 }}>Select Date & Time</DialogTitle>
 
             <DialogContent>
@@ -190,9 +190,9 @@ const BookingSlotDialog = ({ open, onClose, interviewerId, onSlotSelected }) => 
                             <CircularProgress />
                         </Box>
                     ) : (
-                        <Stack spacing={3}>
-                            {/* Calendar Section */}
-                            <Box>
+                        <Stack direction="row" spacing={3}>
+                            {/* LEFT SIDE — CALENDAR */}
+                            <Box sx={{ flex: 1 }}>
                                 <Stack spacing={2}>
                                     {/* Month Header */}
                                     <Stack direction="row" alignItems="center" justifyContent="space-between">
@@ -262,9 +262,6 @@ const BookingSlotDialog = ({ open, onClose, interviewerId, onSlotSelected }) => 
                                                                                     display: "flex",
                                                                                     alignItems: "center",
                                                                                     justifyContent: "center",
-                                                                                    cursor: hasSlot
-                                                                                        ? "pointer"
-                                                                                        : "default",
                                                                                     bgcolor: isSelected
                                                                                         ? "#4F46E5"
                                                                                         : "transparent",
@@ -297,27 +294,25 @@ const BookingSlotDialog = ({ open, onClose, interviewerId, onSlotSelected }) => 
                                 </Stack>
                             </Box>
 
-                            {/* Time Slots Section */}
-                            <Box>
+                            {/* RIGHT SIDE — TIME SLOTS */}
+                            <Box sx={{ width: 260 }}>
                                 <Stack spacing={1.5}>
                                     <Box>
                                         <Typography variant="subtitle2" fontWeight={600} color="text.secondary">
-                                            Select Date
+                                            Select Time
                                         </Typography>
                                         {selectedDate ? (
                                             <Typography variant="body2" fontWeight={500} sx={{ mt: 0.5 }}>
-                                                {format(selectedDate, "EEEE, dd MMMM yyyy", {
-                                                    locale: enUS,
-                                                })}
+                                                {format(selectedDate, "EEEE, dd MMMM yyyy", { locale: enUS })}
                                             </Typography>
                                         ) : (
                                             <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                                                Please select a date
+                                                Select a date
                                             </Typography>
                                         )}
                                     </Box>
 
-                                    <Box sx={{ maxHeight: 280, overflowY: "auto" }}>
+                                    <Box sx={{ maxHeight: 400, overflowY: "auto" }}>
                                         {slotsForSelectedDate.length > 0 ? (
                                             <Stack spacing={1}>
                                                 {slotsForSelectedDate.map((slot) => (
@@ -392,13 +387,7 @@ const BookingSlotDialog = ({ open, onClose, interviewerId, onSlotSelected }) => 
                                                 ))}
                                             </Stack>
                                         ) : (
-                                            <Paper
-                                                sx={{
-                                                    p: 2,
-                                                    textAlign: "center",
-                                                    bgcolor: "#F9FAFB",
-                                                }}
-                                            >
+                                            <Paper sx={{ p: 2, textAlign: "center", bgcolor: "#F9FAFB" }}>
                                                 <Typography variant="body2" color="text.secondary">
                                                     {selectedDate
                                                         ? "No available slots for this date"
