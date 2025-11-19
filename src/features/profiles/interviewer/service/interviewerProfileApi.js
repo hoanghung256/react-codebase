@@ -8,4 +8,7 @@ export const interviewerProfileEndPoints = {
     VIEW_PROFILE_BY_INTERVIEWEE: BE_BASE_URL + `/interviewer-profile/{id}/profile`,
     CREATE_INTERVIEWER_PROFILE: BE_BASE_URL + "/interviewer-profile",
     UPDATE_INTERVIEWER_PROFILE: BE_BASE_URL + `/interviewer-profile/{id}`,
+
+    BOOK_INTERVIEW: BE_BASE_URL + `/interview-booking`,
+    GET_BOOKING_TRANSACTION: BE_BASE_URL + `/interview-booking/{orderCode}`,
 };

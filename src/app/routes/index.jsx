@@ -11,6 +11,8 @@ import ProtectedRoute from "../../common/components/ProtectedRoute";
 import { ROLES } from "../../common/constants/common";
 import HomePage from "../../features/home/pages/HomePage";
 import UserProfilePage from "../../features/profile/pages/UserProfilePage";
+import InterviewRoomListPage from "../../features/interview/pages/InterviewRoomListPage/InterviewRoomListPage";
+import InterviewRoomPage from "../../features/interview/pages/InterviewRoomPage/InterviewRoomPage";
 
 export const routes = [
     { path: "/", element: <Navigate to="/home" replace /> },
@@ -50,6 +52,21 @@ export const routes = [
         ),
         children: adminRoutes,
     },
+    {
+        element: (
+            <ProtectedRoute allowedRoles={[ROLES.INTERVIEWEE, ROLES.INTERVIEWER]}>
+                <MainLayout />
+            </ProtectedRoute>
+        ),
+        children: [
+            { path: "/interview", element: <InterviewRoomListPage /> },
+            {
+                element: <EmptyLayout />,
+                children: [{ path: "/interview/room/:roomId", element: <InterviewRoomPage /> }],
+            },
+        ],
+    },
+
     // Public routes
     {
         element: <DefaultLayout />,

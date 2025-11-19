@@ -5,7 +5,6 @@ import { callApi } from "../../../../common/utils/apiConnector";
 import { METHOD } from "../../../../common/constants/api";
 import { interviewerProfileEndPoints } from "../service/interviewerProfileApi";
 import {
-    Autocomplete,
     Avatar,
     Box,
     Button,
@@ -15,24 +14,18 @@ import {
     CircularProgress,
     Divider,
     Grid,
-    Link,
     Stack,
-    TextField,
     Typography,
     Paper,
-    IconButton,
-    Fade,
-    Alert,
+    Rating,
+    Container,
 } from "@mui/material";
 import {
-    Edit as EditIcon,
-    Save as SaveIcon,
-    Close as CloseIcon,
-    Work as WorkIcon,
-    Code as CodeIcon,
-    Person as PersonIcon,
-    Email as EmailIcon,
-    Link as LinkIcon,
+    Star as StarIcon,
+    VideoCall as VideoCallIcon,
+    Assignment as AssignmentIcon,
+    Schedule as ScheduleIcon,
+    SwapHoriz as SwapIcon,
 } from "@mui/icons-material";
 
 function getRoleFromJwt() {

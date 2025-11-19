@@ -6,6 +6,7 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
 import Editor from "@monaco-editor/react";
 import { useEffect, useRef } from "react";
+import { ROLES } from "../../../../common/constants/common.js";
 
 function CodeEditorPanel({
     languages,
@@ -91,7 +92,7 @@ function CodeEditorPanel({
                     flexShrink: 0,
                 }}
             >
-                {user?.role === 0 ? (
+                {user?.role === ROLES.INTERVIEWEE ? (
                     <Select
                         value={language}
                         onChange={handleLanguageChange}
@@ -109,7 +110,7 @@ function CodeEditorPanel({
                         Language: <strong>{language.charAt(0).toUpperCase() + language.slice(1)}</strong>
                     </Typography>
                 )}
-                {user?.role === 0 && (
+                {user?.role === ROLES.INTERVIEWEE && (
                     <>
                         <Tooltip title="Format Code (Shift+Alt+F)">
                             <IconButton onClick={formatCode} size="small">
@@ -153,7 +154,7 @@ function CodeEditorPanel({
                     onMount={onEditorMount}
                     onChange={handleCodeChange}
                     options={{
-                        readOnly: user?.role === 1,
+                        readOnly: user?.role === ROLES.INTERVIEWER,
                         minimap: { enabled: false },
                         scrollbar: { vertical: "auto", horizontal: "auto" },
                         scrollBeyondLastLine: false,
