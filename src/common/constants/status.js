@@ -5,3 +5,16 @@ export const INTERVIEW_ROOM_STATUS = {
     CANCELLED: 3,
     NO_SHOW: 4,
 };
+
+export const TRANSACTION_STATUS = {
+    CREATED: 0,
+    PAID: 1,
+    CANCEL: 2,
+};
+
+export const PAYOS_TRANSACTION_STATUS = {
+    PAID: "PAID",
+    PENDING: "PENDING",
+    PROCESSING: "PROCESSING",
+    CANCELLED: "CANCELLED",
+};

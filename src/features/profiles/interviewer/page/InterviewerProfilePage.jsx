@@ -5,7 +5,6 @@ import { callApi } from "../../../../common/utils/apiConnector";
 import { METHOD } from "../../../../common/constants/api";
 import { interviewerProfileEndPoints } from "../service/interviewerProfileApi";
 import {
-    Autocomplete,
     Avatar,
     Box,
     Button,
@@ -15,29 +14,34 @@ import {
     CircularProgress,
     Divider,
     Grid,
-    Link,
     Stack,
-    TextField,
     Typography,
     Paper,
-    IconButton,
+    Rating,
+    Container,
     Fade,
     Alert,
+    IconButton,
+    TextField,
+    Link,
+    Autocomplete,
 } from "@mui/material";
+
 import {
     Edit as EditIcon,
-    Save as SaveIcon,
-    Close as CloseIcon,
     Work as WorkIcon,
-    Code as CodeIcon,
     Person as PersonIcon,
     Email as EmailIcon,
     Link as LinkIcon,
+    Code as CodeIcon,
+    Close as CloseIcon,
+    Save as SaveIcon,
 } from "@mui/icons-material";
 import { CameraAlt as CameraIcon } from "@mui/icons-material";
 import { uploadImage } from "../../../../firebase/service/storage";
 import { useDispatch } from "react-redux";
 import { setUserData } from "../../../../common/store/authSlice";
+import BankSelection from "./BankSelection";
 
 function getRoleFromJwt() {
     try {
@@ -108,6 +112,8 @@ function InterviewerProfilePage() {
                         ...res.data,
                         skills: res.data.skills?.map((s) => s.name || s) || [],
                         companies: res.data.companies?.map((c) => c.name || c) || [],
+                        bankBinNumber: res.data.bankBinNumber || "",
+                        bankAccountNumber: res.data.bankAccountNumber || "",
                     });
                 } else {
                     setError(res.message || "Failed to load profile");
@@ -243,6 +249,8 @@ function InterviewerProfilePage() {
                 bio: profile.bio || "",
                 skillIds,
                 companyIds,
+                bankBinNumber: profile.bankBinNumber || "",
+                bankAccountNumber: String(profile.bankAccountNumber || "").trim(),
             };
 
             const res = await callApi({
@@ -508,6 +516,52 @@ function InterviewerProfilePage() {
                                             >
                                                 {profile.portfolioUrl}
                                             </Link>
+                                        ) : (
+                                            <Typography color="text.secondary">Not provided</Typography>
+                                        )
+                                    }
+                                />
+
+                                {/* Bank BIN */}
+                                <InfoRow
+                                    icon={<LinkIcon fontSize="small" />}
+                                    label="Bank"
+                                    content={
+                                        editMode ? (
+                                            <BankSelection
+                                                valueBin={profile?.bankBinNumber || ""}
+                                                onBankBinChange={(bin) =>
+                                                    setProfile((prev) => ({ ...prev, bankBinNumber: bin }))
+                                                }
+                                            />
+                                        ) : profile?.bankBinNumber ? (
+                                            `BIN: ${profile.bankBinNumber}`
+                                        ) : (
+                                            <Typography color="text.secondary">Not provided</Typography>
+                                        )
+                                    }
+                                />
+
+                                {/* Bank Account Number */}
+                                <InfoRow
+                                    icon={<LinkIcon fontSize="small" />}
+                                    label="Bank Account Number"
+                                    content={
+                                        editMode ? (
+                                            <TextField
+                                                fullWidth
+                                                size="small"
+                                                placeholder="Enter bank account number"
+                                                value={profile?.bankAccountNumber || ""}
+                                                onChange={(e) =>
+                                                    setProfile((prev) => ({
+                                                        ...prev,
+                                                        bankAccountNumber: e.target.value,
+                                                    }))
+                                                }
+                                            />
+                                        ) : profile?.bankAccountNumber ? (
+                                            profile.bankAccountNumber
                                         ) : (
                                             <Typography color="text.secondary">Not provided</Typography>
                                         )

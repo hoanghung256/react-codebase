@@ -22,11 +22,11 @@ const MainLayout = () => {
       { label: 'Home', path: '/home' },
       { label: 'Interview', path: '/interview' },
       { label: 'Messages', path: '#' },
-      { label: 'Profile', path: '#' },
+      { label: 'Profile', path: '/user/profile' },
     ],
     // INTERVIEWER
     [
-      { label: 'Dashboard', path: '/dashboard' },
+      { label: 'Dashboard', path: '/#' },
       { label: 'Schedule', path: '/schedule' },
       { label: 'Interview', path: '/interview' },
       { label: 'Messages', path: '#' },
@@ -50,7 +50,7 @@ const MainLayout = () => {
         <div className="navbar-container">
           {/* Logo */}
           <div className="navbar-logo">
-            <h1>intervu</h1>
+            <h1>INTERVU</h1>
           </div>
 
           {/* Navigation Menu */}

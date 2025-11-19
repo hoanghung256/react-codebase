@@ -11,7 +11,7 @@ const filter = createFilterOptions({
  * @param {function} onBankBinChange - Callback function to receive selected bank BIN
  *
  * */
-function BankSelection({ onBankBinChange }) {
+function BankSelection({ onBankBinChange, valueBin }) {
     const [banks, setBanks] = useState([]);
     const [selectedBank, setSelectedBank] = useState(null);
 
@@ -28,6 +28,13 @@ function BankSelection({ onBankBinChange }) {
         }
     };
 
+    // Preselect bank by BIN when provided and list is loaded
+    useEffect(() => {
+        if (!valueBin || !banks?.length) return;
+        const found = banks.find((b) => String(b.bin) === String(valueBin));
+        setSelectedBank(found ?? null);
+    }, [valueBin, banks]);
+
     const handleChange = (event, value) => {
         setSelectedBank(value);
         onBankBinChange && onBankBinChange(value ? value.bin : "");
@@ -40,7 +47,9 @@ function BankSelection({ onBankBinChange }) {
             value={selectedBank}
             onChange={handleChange}
             getOptionLabel={(bank) => bank?.name || ""}
-            renderInput={(params) => <TextField {...params} label="Select Bank" placeholder="Search name or code..." />}
+            renderInput={(params) => (
+                <TextField {...params} label="Select Bank" placeholder="Search name or code..." fullWidth />
+            )}
             isOptionEqualToValue={(option, value) => option.bin === value.bin}
         />
     );
