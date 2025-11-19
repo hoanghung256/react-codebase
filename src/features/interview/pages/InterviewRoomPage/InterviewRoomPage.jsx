@@ -203,11 +203,11 @@ function InterviewRoomPage() {
             setMyId(newId ?? null);
             console.log("Reconnected with id:", newId);
             // Re-join the room with the new connection ID
-            // conn.invoke("JoinRoom", roomId)
-            //     .then(() => {
-            //         console.log("Re-joined room", roomId, "with new connection ID:", newId);
-            //     })
-            //     .catch(console.error);
+            conn.invoke("JoinRoom", roomId)
+                .then(() => {
+                    console.log("Re-joined room", roomId, "with new connection ID:", newId);
+                })
+                .catch(console.error);
         });
 
         conn.on("UserJoined", (connectionId) => {
@@ -315,7 +315,7 @@ function InterviewRoomPage() {
             // Create answer
             const answer = await pcRef.current.createAnswer();
             await pcRef.current.setLocalDescription(answer);
-            conn.invoke("SendAnswer", fromId, answer.sdp);
+            await conn.invoke("SendAnswer", fromId, answer.sdp);
             console.log(
                 "Sent answer to",
                 fromId,
@@ -359,11 +359,11 @@ function InterviewRoomPage() {
         });
 
         conn.on("ReceiveCode", (changes, codeLang) => {
-            if (language === codeLang && editorRef.current) {
+            if (editorRef.current) {
                 isExternalChange.current = true;
                 // Apply the changes received from the server
                 const currentPosition = editorRef.current.getPosition();
-                editorRef.current.executeEdits("remote", changes);
+                editorRef.current.setValue(changes);
                 if (currentPosition) {
                     editorRef.current.setPosition(currentPosition);
                 }
@@ -647,26 +647,43 @@ function InterviewRoomPage() {
     };
 
     const handleCodeChange = (value, event) => {
-        if (isExternalChange.current) {
+        // The 'value' parameter is the full, current code in the editor.
+        // We use it instead of event.changes.
+        if (isExternalChange.current || !connRef.current) {
             return;
         }
 
-        // The candidate sends the changes to the server.
-        // The interviewer's changes are local until they run code or change language.
-        if (user?.role !== ROLES.INTERVIEWER && connRef.current && event.changes.length > 0) {
-            // No need to debounce when sending lightweight changes
-            connRef.current.invoke("SendCode", roomId, event.changes, language);
+        // Debounce the code sending to avoid flooding the server
+        if (sendCodeTimeout.current) {
+            clearTimeout(sendCodeTimeout.current);
+        }
+
+        // Only the interviewee sends code changes automatically.
+        if (user?.role === ROLES.INTERVIEWEE) {
+            sendCodeTimeout.current = setTimeout(() => {
+                connRef.current.invoke("SendCode", roomId, value, language).catch(console.error);
+            }, 300); // Send after 300ms of inactivity
         }
    };
 
-    const handleLanguageChange = (e) => {
+    const handleLanguageChange = async (e) => {
         const newLang = e.target.value;
         const oldLang = language;
         setLanguage(newLang);
 
         if (connRef.current) {
             const oldCode = editorRef.current?.getValue();
-            connRef.current.invoke("SendCode", roomId, oldCode, oldLang);
+            // console.log(roomId);
+            // console.log(oldCode);
+            // console.log(oldLang);
+            // connRef.current.invoke("SendCode", roomId, oldCode, oldLang);
+            try {
+                // Await the SendCode invocation to handle potential errors
+                await connRef.current.invoke("SendCode", roomId, oldCode, oldLang);
+                console.log(`Sent old code for language ${oldLang} to server.`);
+            } catch (error) {
+                console.error(`Error sending old code for language ${oldLang}:`, error);
+            }
         }
         // const newCode = languages[newLang].example;
         // setCode(newCode);
@@ -688,7 +705,14 @@ function InterviewRoomPage() {
         }));
 
         if (connRef.current) {
-            connRef.current.invoke("SendLanguage", roomId, newLang);
+            // connRef.current.invoke("SendLanguage", roomId, newLang);
+            try {
+                // Await the SendLanguage invocation
+                await connRef.current.invoke("SendLanguage", roomId, newLang);
+                console.log(`Sent new language ${newLang} to server.`);
+            } catch (error) {
+                console.error(`Error sending new language ${newLang}:`, error);
+            }
         }
     };
 
